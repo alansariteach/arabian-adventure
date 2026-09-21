@@ -233,14 +233,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (frame === 'run' && HERO.runSheet && HERO.runN) {
       var n = HERO.runN, fw = HERO.runSheet.width / n, fh = HERO.runSheet.height;
       var rf = ((opt.runFrame || 0) % n + n) % n;
-      var th2 = h * 2.15 * (1 + (opt.stretch || 0));
+      /* دورة الصور فيها نطة طبيعية — لا نضيف نطة/تمدد فوقها (كان يسبب رجفة) */
+      var th2 = h * 2.15;
       var tw2 = th2 * (fw / fh);
-      var cx2 = Math.round(x + w / 2), by2 = Math.round(y + h + (opt.lift || 0));
+      var cx2 = Math.round(x + w / 2), by2 = Math.round(y + h);
       g.save();
       g.translate(cx2, by2);
       g.scale(face, 1);
-      if (opt.lean) g.rotate(opt.lean * face);
-      if (opt.spin) g.rotate(opt.spin);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
       g.drawImage(HERO.runSheet, Math.round(rf * fw), 0, Math.round(fw), fh, Math.round(-tw2 / 2), -th2, Math.round(tw2), Math.round(th2));
       g.restore(); g.globalAlpha = 1;
@@ -985,7 +984,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   $('bestTag').textContent = best > 0 ? ('أفضل نتيجة عندك: 💎 ' + best) : 'أول مرة تلعب؟ بالتوفيق يا قبطان ⛵';
   requestAnimationFrame(loop);
   window.__game = { start: startGame, load: loadLevel, get state() { return state; }, get p() { return P; }, keys: keys, get gems() { return gems; }, get lives() { return lives; }, get level() { return level; }, get cam() { return cam; }, next: nextLevel, setState: function (s) { state = s; }, jump: function () { P.vy = JUMP; },
-    get rage() { return rage; }, setRage: function (v) { rage = v; hud(); },
+    get rage() { return rage; }, setRage: function (v) { rage = v; hud(); },
+
     get hero() { return { ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
 })();
 </script>
