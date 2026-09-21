@@ -234,18 +234,24 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       var n = HERO.runN, fw = HERO.runSheet.width / n, fh = HERO.runSheet.height;
       var rf = ((opt.runFrame || 0) % n + n) % n;
       /* دورة الصور فيها نطة طبيعية — لا نضيف نطة/تمدد فوقها (كان يسبب رجفة) */
-      var th2 = h * 2.26;
+      var th2 = h * 2.6;
       var tw2 = th2 * (fw / fh);
       var cx2 = Math.round(x + w / 2);
       /* طور الخطوة (0..1) — كل شي متزامن مع المسافة عشان ما يرتجف */
-      var ph = (opt.phase || 0);
-      var bob = -Math.abs(Math.sin(ph * Math.PI)) * 1.6;          /* نطة خفيفة */
-      var stretch = 1 + Math.abs(Math.sin(ph * Math.PI)) * 0.022;  /* تمدد */
+      /* طور الخطوة: ٨ إطارات = دورتين كاملتين (كل خطوة نطة) */
+      var stridePh = (opt.runFrame || 0) + (opt.phase || 0);
+      var sp2 = stridePh * 0.25 * Math.PI * 2;          /* دورتين لكل دورة ركض */
+      var bob = -Math.abs(Math.sin(sp2)) * 3.1;      /* نطة الجسم مع كل خطوة */
+      var stretch = 1 + Math.abs(Math.sin(sp2)) * 0.03;
+      var lean2 = Math.sin(sp2) * 0.016;             /* ميل خفيف متزامن */
       var th3 = th2 * stretch, tw3 = tw2 * stretch;
       var by2 = Math.round(y + h + bob);
+      var lx2 = Math.sin(sp2) * 1.4;    /* تمايل أفقي بسيط */
       var dx = Math.round(-tw3 / 2), dy = -th3;
       g.save();
       g.translate(cx2, by2); g.scale(face, 1);
+      if (lean2) g.rotate(lean2);
+      g.translate(lx2, 0);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
       /* شبحة الإطار السابق — تعطي إحساس سرعة وانسيابية */
       if (opt.ghost && HERO.runSheet) {
@@ -861,7 +867,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     $('hTime').textContent = fmtT(time);
     var rb = $('rageBar'); if (rb) { rb.style.width = Math.round(rage) + '%'; }
     var rp = $('hRagePill'); if (rp) { rp.classList.toggle('full', rage >= 100); }
-    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); kr.classList.toggle('charging', charging); }
+    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); kr.classList.toggle('charging', charging); }
+
     var kt = $('kT'); if (kt) { kt.classList.toggle('cool', P.cd > 0.02); }
   }
   function rageReady() { return state === 'play' && rage >= 100 && P.rageT <= 0 && !P.dead; }
