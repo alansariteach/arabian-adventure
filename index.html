@@ -151,10 +151,10 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                                                                ",
           "                                                                                ",
           "                                                                                ",
-          "                                 b                     b                        ",
+          "                                                                                ",
           "                   o                      o                   o                 ",
           "          o      ====       o           =====       o       =====               ",
-          "   S    =====       kco   =====   o   w      co   ====            o   o o G     ",
+          "   S    =====       k o   =====   o   w       o   ====            o   o o G     ",
           "###############   ##########   ######################   ########################",
           "###############   ##########   ######################   ########################",
           "###############~~~##########~~~######################~~~########################"    ]},
@@ -165,11 +165,11 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                                                                ",
           "                                                                                ",
           "                                                                                ",
-          "                              b                                                 ",
-          "                                           o                  b                 ",
+          "                                                                                ",
+          "                                           o                                    ",
           "                o                  o      ====              o                   ",
           "        o     =====       o      =====              o     ====      o           ",
-          "   S   ====B       c    ====  o       c     k   o =====c       w o ===== o   G  ",
+          "   S   ====B            ====  o             k   o =====        w o ===== o   G  ",
           "############   ######   #######################   #####################   ######",
           "############   ######   #######################   #####################   ######",
           "############~~~######~~~#######################~~~#####################~~~######"    ]},
@@ -180,11 +180,11 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                                                                ",
           "                                                                                ",
           "                                                                                ",
-          "                            b                b                      b           ",
+          "                                                                                ",
           "                                o                                               ",
           "                 o             ====      o                o                     ",
           "        o      ====      o             =====     o      =====     o             ",
-          "   S  ===== c       o  ===^^  w     c       o  ==== c^^     oB  ====  o o    G  ",
+          "   S  =====         o  ===^^  w             o  ====  ^^     oB  ====  o o    G  ",
           "###################   ####################   ############################   ####",
           "###################   ####################   ############################   ####",
           "###################~~~####################~~~############################~~~####"    ]}
@@ -420,8 +420,6 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         solids[y][x] = (ch === '#' || ch === '=') ? (ch === '=' ? 2 : 1) : 0;
         hazards[y][x] = (ch === '^') ? 1 : (ch === '~') ? 2 : 0;
         if (ch === 'o') gemList.push({ x: x * TS + TS / 2, y: y * TS + TS / 2, got: false, t: Math.random() * 6 });
-        else if (ch === 'c') foes.push({ type: 'crab', x: x * TS + 4, y: y * TS + 6, w: 24, h: 20, vx: -42, dead: 0, t: Math.random() * 6 });
-        else if (ch === 'b') foes.push({ type: 'bird', x: x * TS + 4, y: y * TS + 4, w: 26, h: 20, vx: -60, dead: 0, t: Math.random() * 6, y0: y * TS + 4 });
         else if (ch === 'k') foes.push({ type: 'skater', x: x * TS + 3, y: y * TS - 2, w: 26, h: 32, vx: -96, vy: 0, dead: 0, t: Math.random() * 6, hp: 1 });
         else if (ch === 'B') foes.push({ type: 'brute', x: x * TS + 1, y: y * TS - 6, w: 30, h: 38, vx: -42, vy: 0, dead: 0, t: Math.random() * 6, hp: 2, hurtT: 0 });
         else if (ch === 'w') foes.push({ type: 'blaster', x: x * TS + 3, y: y * TS - 2, w: 26, h: 34, vx: 0, dead: 0, t: Math.random() * 6, hp: 1, cd: rnd(1.0, 2.2), face: -1, fireT: 0 });
