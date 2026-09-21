@@ -46,6 +46,11 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 .energypill{display:inline-flex;align-items:center;gap:6px}
 .energypill.low .ebar i{background:linear-gradient(90deg,#e04f4f,#ff9a9a)}
 .pill.boost{background:#2f7fbd40;border-color:#7fc4ff88}
+#bossWrap{position:absolute;top:46px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;
+  background:#2a0f0fcc;border:1px solid #ff9a3c66;border-radius:999px;padding:5px 12px;font-size:12px;color:#ffd9b0;z-index:6}
+#bossWrap[hidden]{display:none}
+.bbar{display:inline-block;width:150px;height:9px;border-radius:5px;background:#ffffff26;overflow:hidden}
+.bbar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#e04f4f,#ffb36b);transition:width .18s}
 .winimg{height:132px;margin:0 0 6px;filter:drop-shadow(0 10px 22px #0007)}
 /* شاشات */
 .ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -82,7 +87,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     <button id="bMute" title="الصوت">🔊</button>
     <button id="bPause" title="إيقاف">⏸</button>
   </div>
-  <div id="stage"><canvas id="cv"></canvas></div>
+  <div id="stage"><canvas id="cv"></canvas>
+    <div id="bossWrap" hidden><span>💀 زعيم المرحلة</span><span class="bbar"><i id="bossFill"></i></span></div>
+  </div>
   <div id="pad">
     <div class="side">
       <div class="k" id="kL">◀</div>
@@ -162,7 +169,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                                                                ",
           "                   o          h           o                   o                 ",
           "      f   o      ====       o          p=====       o       =====               ",
-          "   S    =====       k o   =====   o   w       o   ====            o   o o G     ",
+          "   S    =====       k o   =====   o   w       o   ====            o X o o G     ",
           "###############   ##########   ######################   ########################",
           "###############   ##########   ######################   ########################",
           "###############~~~##########~~~######################~~~########################"    ]},
@@ -177,7 +184,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                           o                                    ",
           "                o                  o      ====              o                   ",
           "        o   f =====       o      =====              o     ====      o           ",
-          "   S   ====B            ====  o             k   o =====        w o ===== o   G  ",
+          "   S   ====B            ====  o             k   o =====        w oX===== o   G  ",
           "############   ######   #######################   #####################   ######",
           "############   ######   #######################   #####################   ######",
           "############~~~######~~~#######################~~~#####################~~~######"    ]},
@@ -192,7 +199,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                o                                               ",
           "                 o             ====     so                o                     ",
           "        o   p  ====      o             =====     o      =====h    o             ",
-          "   S  =====         o  ===^^  w             o  ====  ^^     oB  ====  o o    G  ",
+          "   S  =====         o  ===^^  w             o  ====  ^^     oB  ====  oXo    G  ",
           "###################   ####################   ############################   ####",
           "###################   ####################   ############################   ####",
           "###################~~~####################~~~############################~~~####"    ]}
@@ -204,7 +211,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   var clamp = function (v, a, b) { return v < a ? a : v > b ? b : v; };
   var rnd = function (a, b) { return a + Math.random() * (b - a); };
 
-  var view = { w: 640, h: 11 * TS, k: 1, dpr: 1 };   // 11 صف مرئي (تكبير)
+  var view = { w: 640, h: 11 * TS, k: 1, dpr: 1 };
+  var camZoom = 1, camZoomT = 1;   /* تقريب/تبعيد بسيط حسب الحالة */   // 11 صف مرئي (تكبير)
 
   /* ---------- حالة اللعبة ---------- */
   var state = 'title', level = 0, lives = MAXLIVES, gems = 0, time = 0;
@@ -216,6 +224,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   var proj = [], rage = 0, rings = [], charging = false, chargeT = 0;
   var wshots = [], splashes = [], FOEIMG = {};
   var pickups = [];
+  var boss = null, bossHP = 0, bossMax = 3, bossState = 'idle', bossT = 0, bossLock = false;
   var best = 0, muted = false;
   /* ---------- شكل الشخصية (قابل للتخصيص من المستخدم) ---------- */
   var LOOK = { skin: '#e8b98a', hat: 'turban', hatCol: '#fdfaf4', tunic: '#1f7a5a', pants: '#5a3a12', sash: '#d94f3d', carpet: '#b3202f', img: null };
@@ -420,7 +429,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var rows = L.rows.slice();
     mapW = Math.max.apply(null, rows.map(function (r) { return r.length; }));
     mapH = ROWS;
-    solids = []; hazards = []; gemList = []; foes = []; pickups = [];
+    solids = []; hazards = []; gemList = []; foes = []; pickups = []; boss = null; bossHP = 0; bossState = 'idle'; bossT = 0; bossLock = false;
     goal = null; spawn = { x: 64, y: 100 };
     for (var y = 0; y < mapH; y++) {
       var r = (rows[y] || '') + new Array(Math.max(0, mapW - (rows[y] || '').length) + 1).join(' ');
@@ -430,6 +439,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         solids[y][x] = (ch === '#' || ch === '=') ? (ch === '=' ? 2 : 1) : 0;
         hazards[y][x] = (ch === '^') ? 1 : (ch === '~') ? 2 : 0;
         if (ch === 'o') gemList.push({ x: x * TS + TS / 2, y: y * TS + TS / 2, got: false, t: Math.random() * 6 });
+        else if (ch === 'X') { boss = { x: x * TS + 2, y: y * TS - 12, w: 44, h: 52, vx: 0, vy: 0, face: -1, t: 0, hp: 3, hurtT: 0, act: 'walk', actT: 1.4, on: false }; bossHP = 3; bossMax = 3; }
         else if (ch === 'f' || ch === 'h' || ch === 'p' || ch === 's') pickups.push({ type: ch, x: x * TS + TS / 2, y: y * TS + TS / 2, got: false, t: Math.random() * 6 });
         else if (ch === 'k') foes.push({ type: 'skater', x: x * TS + 3, y: y * TS - 2, w: 26, h: 32, vx: -96, vy: 0, dead: 0, t: Math.random() * 6, hp: 1 });
         else if (ch === 'B') foes.push({ type: 'brute', x: x * TS + 1, y: y * TS - 6, w: 30, h: 38, vx: -42, vy: 0, dead: 0, t: Math.random() * 6, hp: 2, hurtT: 0 });
@@ -613,6 +623,50 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       }
     }
 
+    /* ---------- الزعيم: ٣ مراحل ---------- */
+    if (boss && boss.hp > 0) {
+      var B = boss; B.t += dt; if (B.hurtT > 0) B.hurtT -= dt;
+      B.face = ((P.x + P.w / 2) < (B.x + B.w / 2)) ? -1 : 1;
+      B.actT -= dt;
+      var distP = Math.abs((P.x + P.w / 2) - (B.x + B.w / 2));
+      /* اختيار الحركة حسب المرحلة */
+      if (B.actT <= 0) {
+        var pool = (B.hp >= 3) ? ['walk', 'slam', 'walk'] : (B.hp === 2) ? ['walk', 'throw', 'slam'] : ['charge', 'throw', 'charge'];
+        B.act = pool[Math.floor(Math.random() * pool.length)];
+        B.actT = (B.act === 'charge') ? 1.0 : (B.act === 'throw') ? 0.9 : 1.5;
+        if (B.act === 'slam') { B.vy = -430; B.on = false; }
+        if (B.act === 'charge') { B.vx = B.face * 250; }
+        if (B.act === 'throw') {
+          wshots.push({ x: B.x + B.w / 2 + B.face * 20, y: B.y + 14, vx: B.face * 300, life: 2.4, t: 0 });
+          sfx('throw');
+        }
+      }
+      /* حركة */
+      if (B.act === 'walk') { B.vx = B.face * 62; }
+      else if (B.act === 'charge') { B.vx = B.face * 250; }
+      else { B.vx *= (1 - Math.min(1, dt * 4)); }
+      B.x += B.vx * dt;
+      if (B.x < 0) { B.x = 0; B.vx = Math.abs(B.vx); }
+      if (B.x > mapW * TS - B.w) { B.x = mapW * TS - B.w; B.vx = -Math.abs(B.vx); }
+      /* جاذبية + أرض */
+      B.vy = Math.min(B.vy + GRAV * dt, MAXFALL); B.y += B.vy * dt;
+      var brow = Math.floor((B.y + B.h) / TS), bcol = Math.floor((B.x + B.w / 2) / TS);
+      if (B.vy >= 0 && brow >= 0 && brow < mapH && bcol >= 0 && bcol < mapW && solids[brow][bcol]) {
+        if (B.vy > 300 && !B.on) { shake = 0.45; puff(B.x + B.w / 2, B.y + B.h, 12, '#e3cf9e'); sfx('stomp'); }
+        B.y = brow * TS - B.h; B.vy = 0; B.on = true;
+      } else if (B.vy < 0) B.on = false;
+      /* اصطدام باللاعب: الدوس يشتغل دائماً (حتى أثناء الحصانة) */
+      if (!P.dead && P.x < B.x + B.w && P.x + P.w > B.x && P.y < B.y + B.h && P.y + P.h > B.y) {
+        var bstomp = (P.vy > 60 || (!P.on && P.rageT > 0)) && (P.y + P.h) < (B.y + B.h * 0.55);
+        if (bstomp) {
+          B.hp--; bossHP = B.hp; B.hurtT = 0.5; P.vy = -430; shake = 0.5; sfx('stomp');
+          B.x += B.face * -26; B.act = 'walk'; B.actT = 1.0;
+          floats.push({ x: B.x + B.w / 2, y: B.y, txt: B.hp > 0 ? ('ضربة! باقي ' + B.hp) : '💀 الزعيم مهزوم!', life: 1.4, c: '#ffd166' });
+          if (B.hp <= 0) { kills++; gems += 6; rage = 100; bossLock = false; sfx('win'); shake = 0.8; hud(); }
+        } else if (P.inv <= 0) { hurt(); }
+      }
+    }
+
     /* العناصر: قارورة ماء، عقال ذهبي، قطعة لوح، نعل صغير */
     for (var pi = pickups.length - 1; pi >= 0; pi--) {
       var pu = pickups[pi]; pu.t += dt;
@@ -746,7 +800,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     /* الكنز */
     if (goal && !P.dead && P.x < goal.x + goal.w && P.x + P.w > goal.x && P.y < goal.y + goal.h && P.y + P.h > goal.y) {
       var need = (LEVELS[level].need || 0);
-      if (gems < need) {
+      if (boss && boss.hp > 0) {
+        if (tGlobal - (P.needMsgT || -9) > 1.6) {
+          P.needMsgT = tGlobal;
+          floats.push({ x: goal.x + 16, y: goal.y - 10, txt: 'اقضِ على الزعيم أولاً 💀', life: 1.5, c: '#ff9a3c' });
+          sfx('hurt');
+        }
+      } else if (gems < need) {
         if (tGlobal - (P.needMsgT || -9) > 1.6) {
           P.needMsgT = tGlobal;
           floats.push({ x: goal.x + 16, y: goal.y - 10, txt: 'تحتاج ' + need + ' صدفة 🐚', life: 1.5, c: '#ffd166' });
@@ -757,6 +817,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       }
     }
 
+    /* زوم ديناميكي: يبعد شوي عند القفز، ويقرب عند الضرب */
+    camZoomT = 1 + (P.on ? 0 : 0.05) + (shake > 0.3 ? 0.045 : 0) + (Math.abs(P.vx) > 130 ? 0.02 : 0);
+    camZoom += (camZoomT - camZoom) * Math.min(1, dt * 5);
     /* كاميرا */
     var targetX = clamp(P.x + P.w / 2 - view.w * 0.42, 0, Math.max(0, mapW * TS - view.w));
     var targetY = clamp(P.y + P.h / 2 - view.h * 0.62, 0, Math.max(0, mapH * TS - view.h));
@@ -799,20 +862,48 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   function draw() {
     var W = view.w, H = view.h;
     ctx.save();
-    ctx.setTransform(view.k, 0, 0, view.k, 0, 0);
+    ctx.setTransform(view.k * camZoom, 0, 0, view.k * camZoom, 0, 0);
     if (shake > 0) ctx.translate(rnd(-3, 3) * shake * 2, rnd(-2, 2) * shake * 2);
 
-    /* سماء */
-    var sky = ctx.createLinearGradient(0, 0, 0, H);
-    sky.addColorStop(0, '#12335f'); sky.addColorStop(0.55, '#2f6ea3'); sky.addColorStop(1, '#f0a35e');
+    /* ---------- خلفية بعمق: سماء + بحر + ضباب + طبقات كثبان ---------- */
+    var sky = ctx.createLinearGradient(0, 0, 0, H * 0.78);
+    sky.addColorStop(0, '#0d2a52'); sky.addColorStop(0.42, '#2f6ea3');
+    sky.addColorStop(0.74, '#86b8d8'); sky.addColorStop(1, '#f3c07a');
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
-    /* شمس */
-    ctx.fillStyle = '#ffd88a'; ctx.beginPath(); ctx.arc(W * 0.78, H * 0.22, 34, 0, 7); ctx.fill();
-    ctx.globalAlpha = 0.18; ctx.beginPath(); ctx.arc(W * 0.78, H * 0.22, 62, 0, 7); ctx.fill(); ctx.globalAlpha = 1;
-    /* كثبان بعيدة */
-    dune(0.25, H * 0.60, '#8a6a45', 120, 0.9);
-    dune(0.45, H * 0.70, '#a87c4b', 90, 1.3);
-    dune(0.62, H * 0.80, '#c08f52', 70, 1.7);
+    /* شمس بهالة ثلاثية */
+    var sunX = W * 0.76, sunY = H * 0.19;
+    ctx.fillStyle = '#ffd88a';
+    ctx.globalAlpha = 0.13; ctx.beginPath(); ctx.arc(sunX, sunY, 78, 0, 7); ctx.fill();
+    ctx.globalAlpha = 0.26; ctx.beginPath(); ctx.arc(sunX, sunY, 50, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = '#ffe9b0'; ctx.beginPath(); ctx.arc(sunX, sunY, 30, 0, 7); ctx.fill();
+    /* بحر بعيد */
+    var seaY = H * 0.58;
+    var sea = ctx.createLinearGradient(0, seaY, 0, seaY + 34);
+    sea.addColorStop(0, '#2f76a6'); sea.addColorStop(1, '#1c4d74');
+    ctx.fillStyle = sea; ctx.fillRect(0, seaY, W, 34);
+    /* لمعان على الماء (بارالاكس بطيء) */
+    for (var si = 0; si < 24; si++) {
+      var sx = ((si * 83 - cam.x * 0.05) % (W + 80) + W + 80) % (W + 80) - 40;
+      var sy = seaY + 5 + (si % 5) * 6.4;
+      ctx.globalAlpha = 0.10 + 0.09 * Math.abs(Math.sin(tGlobal * 1.8 + si));
+      ctx.fillStyle = '#e6f6ff'; ctx.fillRect(sx, sy, 18 + (si % 4) * 9, 1.6);
+    }
+    ctx.globalAlpha = 1;
+    /* جزر/جبال بعيدة جداً */
+    dune(0.05, H * 0.60, '#52738f', 150, 0.5);
+    /* ضباب الأفق */
+    var fog = ctx.createLinearGradient(0, H * 0.44, 0, H * 0.82);
+    fog.addColorStop(0, 'rgba(228,241,250,0.62)'); fog.addColorStop(0.45, 'rgba(228,241,250,0.26)'); fog.addColorStop(1, 'rgba(228,241,250,0)');
+    ctx.fillStyle = fog; ctx.fillRect(0, H * 0.44, W, H * 0.38);
+    /* كثبان بأربع طبقات عمق */
+    dune(0.13, H * 0.66, '#7d6547', 122, 0.8);
+    dune(0.28, H * 0.74, '#9c7a4e', 98, 1.15);
+    dune(0.46, H * 0.82, '#b98d57', 76, 1.55);
+    dune(0.66, H * 0.90, '#d3a463', 60, 2.0);
+    /* وهج أمامي (عمق أمامي) */
+    var nf = ctx.createLinearGradient(0, H * 0.84, 0, H);
+    nf.addColorStop(0, 'rgba(255,232,190,0)'); nf.addColorStop(1, 'rgba(255,226,170,0.34)');
+    ctx.fillStyle = nf; ctx.fillRect(0, H * 0.84, W, H * 0.16);
 
     ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
     var x0 = Math.max(0, Math.floor(cam.x / TS) - 1), x1 = Math.min(mapW - 1, Math.ceil((cam.x + W) / TS) + 1);
@@ -904,6 +995,30 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         ctx.beginPath(); ctx.moveTo(f.x + 4, f.y + 8); ctx.lineTo(f.x - 8, f.y + 2 + fl2); ctx.lineTo(f.x + 6, f.y + 12); ctx.closePath(); ctx.fill();
         ctx.beginPath(); ctx.moveTo(f.x + 22, f.y + 8); ctx.lineTo(f.x + 34, f.y + 2 - fl2); ctx.lineTo(f.x + 20, f.y + 12); ctx.closePath(); ctx.fill();
         ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(f.x + 17, f.y + 8, 2.4, 0, 7); ctx.fill();
+      }
+    }
+    /* الزعيم */
+    if (boss && boss.hp > 0 && FOEIMG.brute) {
+      var B2 = boss;
+      var bhh = B2.h * 2.05, bww = bhh * (FOEIMG.brute.width / FOEIMG.brute.height);
+      var bcx = Math.round(B2.x + B2.w / 2), bby = Math.round(B2.y + B2.h + 3);
+      ctx.save();
+      /* ظل */
+      ctx.globalAlpha = 0.22; ctx.fillStyle = '#2a1a06';
+      ctx.beginPath(); ctx.save(); ctx.translate(bcx, B2.y + B2.h + 2); ctx.scale(1, 0.16); ctx.arc(0, 0, bww * 0.34, 0, 7); ctx.restore(); ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.translate(bcx, bby);
+      ctx.scale(B2.face < 0 ? -1 : 1, 1);
+      if (B2.act === 'charge') ctx.rotate(-0.10);
+      if (B2.hurtT > 0) ctx.globalAlpha = (Math.floor(B2.t * 22) % 2) ? 0.4 : 1;
+      ctx.drawImage(FOEIMG.brute, Math.round(-bww / 2), -Math.round(bhh), Math.round(bww), Math.round(bhh));
+      ctx.restore(); ctx.globalAlpha = 1;
+      /* هالة تحذير عند الشحن */
+      if (B2.act === 'charge' || B2.act === 'throw') {
+        ctx.globalAlpha = 0.30 + 0.2 * Math.sin(B2.t * 12);
+        ctx.strokeStyle = B2.act === 'charge' ? '#ff6b6b' : '#ffd166'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.ellipse(bcx, B2.y + B2.h * 0.5, bww * 0.42, bhh * 0.44, 0, 0, 7); ctx.stroke();
+        ctx.globalAlpha = 1;
       }
     }
     /* العناصر */
@@ -1106,6 +1221,12 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     $('hGems').textContent = '🐚 ' + gems;
     if ($('hSlip')) $('hSlip').textContent = '🩴 ' + slips;
     if ($('hKills')) $('hKills').textContent = '💀 ' + kills;
+    var bw = $('bossWrap');
+    if (bw) {
+      var alive = !!(boss && boss.hp > 0);
+      bw.hidden = !alive;
+      if (alive) { var bf = $('bossFill'); if (bf) bf.style.width = Math.round(100 * boss.hp / bossMax) + '%'; }
+    }
     var eb = $('eBar'); if (eb) eb.style.width = Math.max(0, Math.min(100, energy)) + '%';
     var ep = $('hEnergyPill'); if (ep) ep.classList.toggle('low', energy <= 35);
     $('hTime').textContent = fmtT(time);
@@ -1258,6 +1379,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 
     get view() { return { w: view.w, h: view.h, k: view.k, cx: cam.x, cy: cam.y, cw: cv.width, ch: cv.height }; },
 
+    get bossInfo() { return boss ? { x: Math.round(boss.x), y: Math.round(boss.y), w: boss.w, h: boss.h, hp: boss.hp, act: boss.act } : null; },
     get pickups() { return pickups.map(function(q){ return { type: q.type, x: Math.round(q.x), y: Math.round(q.y) }; }); },
     get stats() { return { energy: Math.round(energy), shells: gems, slips: slips, kills: kills, shield: +shieldT.toFixed(1), boost: +boostT.toFixed(1), power: power }; },
     get foes() { return foes.map(function(f){ return { type: f.type, x: Math.round(f.x), y: Math.round(f.y), hp: f.hp, dead: f.dead, cd: f.cd == null ? null : +f.cd.toFixed(2), face: f.face, fireT: f.fireT == null ? null : +f.fireT.toFixed(2) }; }); },
