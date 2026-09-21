@@ -1113,7 +1113,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     /* الزعيم */
     if (boss && boss.hp > 0 && FOEIMG.brute) {
       var B2 = boss;
-      var bhh = B2.h * 2.05, bww = bhh * (FOEIMG.brute.width / FOEIMG.brute.height);
+      var bhh = B2.h * 2.5, bww = bhh * (FOEIMG.brute.width / FOEIMG.brute.height);
       var bcx = Math.round(B2.x + B2.w / 2), bby = Math.round(B2.y + B2.h + 3);
       ctx.save();
       /* ظل */
@@ -1126,6 +1126,25 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       if (B2.hurtT > 0) ctx.globalAlpha = (Math.floor(B2.t * 22) % 2) ? 0.4 : 1;
       ctx.drawImage(FOEIMG.brute, Math.round(-bww / 2), -Math.round(bhh), Math.round(bww), Math.round(bhh));
       ctx.restore(); ctx.globalAlpha = 1;
+      /* تاج + هالة + اسم: علامة واضحة أنه زعيم */
+      ctx.globalAlpha = 0.30 + 0.18 * Math.sin(B2.t * 5);
+      ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(bcx, B2.y + B2.h * 0.5, bww * 0.50, bhh * 0.52, 0, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1;
+      var crownY = B2.y - 4;
+      ctx.fillStyle = '#ffd166';
+      ctx.beginPath(); ctx.rect(bcx - 11, crownY + 1, 22, 3.4); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(bcx - 11, crownY + 1);
+      ctx.lineTo(bcx - 6, crownY - 13); ctx.lineTo(bcx - 4, crownY + 1);
+      ctx.lineTo(bcx + 6, crownY + 1); ctx.lineTo(bcx + 11, crownY - 13); ctx.lineTo(bcx + 12, crownY + 1);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#ff3b3b'; ctx.beginPath(); ctx.arc(bcx - 6, crownY - 6, 1.7, 0, 7); ctx.fill();
+      ctx.fillStyle = '#2fd0ff'; ctx.beginPath(); ctx.arc(bcx + 7, crownY - 6, 1.7, 0, 7); ctx.fill();
+      /* اسم الزعيم كباند */
+      ctx.font = '700 12px "Readex Pro",system-ui,sans-serif'; ctx.textAlign = 'center';
+      var lbl = '👑 الزعيم'; var tw2 = ctx.measureText(lbl);
+      ctx.fillStyle = '#2a0f0f'; ctx.fillRect(bcx - tw2 / 2 - 6, crownY - 34, tw2 + 12, 16);
+      ctx.fillStyle = '#ffd166'; ctx.fillText(lbl, bcx, crownY - 21);
       /* هالة تحذير عند الشحن */
       if (B2.act === 'charge' || B2.act === 'throw') {
         ctx.globalAlpha = 0.30 + 0.2 * Math.sin(B2.t * 12);
