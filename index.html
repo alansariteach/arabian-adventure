@@ -496,7 +496,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       while (hitBox(P.x, P.y, P.w, P.h) && gX++ < 400) { P.x -= dirX * 0.5; }
       /* لصق بالحافة بالضبط */
       if (dirX > 0) { P.x = Math.floor((P.x + P.w) / TS) * TS - P.w; }
-      else { P.x = (Math.floor(P.x / TS) + 1) * TS; }
+      else { P.x = Math.floor(P.x / TS) * TS; }
       P.vx = 0;
     }
     P.on = false;
@@ -508,14 +508,23 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         P.y = Math.floor((P.y + P.h) / TS) * TS - P.h; P.on = true; P.groundT = 0.14; P.coyote = COYOTE;
         if (fallV > 420) { shake = 0.35; puff(P.x + P.w / 2, P.y + P.h, 8, '#e3cf9e'); sfx('stomp'); }   /* هبوط ثقيل */
       }
-      else { P.y = (Math.floor(P.y / TS) + 1) * TS; }
+      else { P.y = Math.floor(P.y / TS) * TS; }   /* السقف: يوقف القفزة بلا ما ينزّله بلاطة */
       P.vy = 0;
     }
     /* علم «واقف على الأرض» ثابت (يمنع رفرفة الأنيميشن) */
     P.groundT = Math.max(0, P.groundT - dt);
     P.on = P.groundT > 0;
-    /* أمان: لو صار داخل بلاطة صلبة لأي سبب */
-    if (hitBox(P.x, P.y, P.w, P.h)) { P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; }
+    /* أمان: لو صار داخل بلاطة صلبة — ندفعه لأقرب فراغ (ما نرجّعه للبداية) */
+    if (hitBox(P.x, P.y, P.w, P.h)) {
+      var esc = 0;
+      while (hitBox(P.x, P.y, P.w, P.h) && esc++ < 40) { P.y -= 2; }     /* جرّب فوق */
+      if (hitBox(P.x, P.y, P.w, P.h)) {
+        esc = 0;
+        while (hitBox(P.x, P.y, P.w, P.h) && esc++ < 80) { P.y += 2; }   /* ثم تحت */
+      }
+      if (hitBox(P.x, P.y, P.w, P.h)) { P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; }   /* آخر حل */
+      else { P.vy = 0; }
+    }
     if (P.on) P.coyote = COYOTE;
     P.x = clamp(P.x, 0, mapW * TS - P.w);
     P.anim += Math.abs(P.vx) * dt * 0.06;
