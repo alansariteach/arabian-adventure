@@ -36,6 +36,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 .k.throw.cool{opacity:.35}
 .k.rage{width:50px;font-size:22px;background:#ffffff14;opacity:.45}
 .k.rage.armed{opacity:1;background:#ff9a3c2e;border-color:#ffd16699;box-shadow:0 0 16px #ff9a3c66}
+.k.rage.charging{opacity:1;transform:scale(1.12);background:#ffd16633;border-color:#ffd166;box-shadow:0 0 22px #ffd16688}
 .ragepill{display:inline-flex;align-items:center;gap:6px}
 .rbar{display:inline-block;width:52px;height:7px;border-radius:4px;background:#ffffff2e;overflow:hidden}
 .rbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9a3c,#ffd166);transition:width .15s}
@@ -90,7 +91,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 <div class="ov" id="ovTitle">
   <h1>سندباد — رحلة الكنز</h1>
   <p>اجمع الجواهر، اقفز على الأعداء، واوصل لصندوق الكنز في نهاية كل مرحلة.<br>
-  <b style="color:#ffd166">الشحّاطة 🩴:</b> «ارمِ» = رمي من بعيد · وإذا العدو قريب تصير <b style="color:#ffd166">ضربة قوية</b>.<br><b style="color:#ff9a3c">الغضب 🔥:</b> كل ما تطيح عدو أو تجمع جوهرة يعمر الغضب — ولمن يوصل ١٠٠% اضغط زر الغضب: <b style="color:#7fc4ff">دوران يطيح كل عدو حولك</b> ومناعة ٦ ثواني!<br><b style="color:#ffd166">البساط الطائر:</b> اضغط «اقفز» واستمر ضاغطاً وأنت نازل — يطير بالبساط!</p>
+  <b style="color:#ffd166">الشحّاطة 🩴:</b> «ارمِ» = رمي من بعيد · وإذا العدو قريب تصير <b style="color:#ffd166">ضربة قوية</b>.<br><b style="color:#ff9a3c">الغضب 🔥:</b> يعمر لما تطيح أعداء وتجمع جواهر. عند ١٠٠% <b>اضغط مطوّل</b> على 🔥 للشحن (كل ما طوّلت = ضربة أقوى) ثم أفلت: <b style="color:#7fc4ff">دوران يطيح كل عدو حولك</b> + مناعة.<br><b style="color:#7fc4ff">النعال يرجع</b> لك مثل البوميرانغ 🩴 — وإذا العدو قريب تصير ضربة مباشرة.<br><b style="color:#ffd166">البساط الطائر:</b> اضغط «اقفز» واستمر ضاغطاً وأنت نازل — يطير بالبساط!</p>
   <div class="keys">
     الجوال: <b>◀ ▶</b> للحركة · <b>اقفز</b> للقفز (اضغط مطوّل = طيران)<br>
     الكمبيوتر: <b>الأسهم</b> · <b>مسافة</b> قفز · <b>F</b> رمي الشحّاطة · <b>P</b> إيقاف
@@ -135,7 +136,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 (function () {
   'use strict';
   var TS = 32, ROWS = 14;                    // حجم البلاطة وارتفاع المرحلة
-  var GRAV = 1500, MAXFALL = 720, SPD = 195, ACC = 1500, FRIC = 1900;
+  var GRAV = 1560, MAXFALL = 740, SPD = 172, ACC = 1180, FRIC = 2100;   /* ثقيل: أبطأ وأثقل */
   var JUMP = -600, CUT = 0.45, GLIDE = 85, COYOTE = 0.1, JBUF = 0.12;
   var MAXLIVES = 3;
 
@@ -200,10 +201,10 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- حالة اللعبة ---------- */
   var state = 'title', level = 0, lives = MAXLIVES, gems = 0, time = 0;
   var solids, hazards, gemList, foes, goal, spawn, mapW, mapH, cam = { x: 0 };
-  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, groundT: 0, smashT: 0, rageT: 0, winT: 0, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
+  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, groundT: 0, smashT: 0, rageT: 0, winT: 0, spinR: 78, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
   var keys = { l: false, r: false, j: false, k: false };
   var particles = [], floats = [], tGlobal = 0, shake = 0, runLatch = false, lastDust = 0;
-  var proj = [], rage = 0, rings = [];
+  var proj = [], rage = 0, rings = [], charging = false, chargeT = 0;
   var best = 0, muted = false;
   /* ---------- شكل الشخصية (قابل للتخصيص من المستخدم) ---------- */
   var LOOK = { skin: '#e8b98a', hat: 'turban', hatCol: '#fdfaf4', tunic: '#1f7a5a', pants: '#5a3a12', sash: '#d94f3d', carpet: '#b3202f', img: null };
@@ -377,6 +378,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     P.vy = Math.min(P.vy + GRAV * dt, MAXFALL);
 
     /* حركة + تصادم (كل محور لحاله — الحل على اتجاه الحركة فقط) */
+    var fallV = P.vy;
     P.x += P.vx * dt;
     if (P.vx !== 0 && hitBox(P.x, P.y, P.w, P.h)) {
       var dirX = P.vx > 0 ? 1 : -1, gX = 0;
@@ -391,7 +393,10 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (P.vy !== 0 && hitBox(P.x, P.y, P.w, P.h)) {
       var dirY = P.vy > 0 ? 1 : -1, gY = 0;
       while (hitBox(P.x, P.y, P.w, P.h) && gY++ < 400) { P.y -= dirY * 0.5; }
-      if (dirY > 0) { P.y = Math.floor((P.y + P.h) / TS) * TS - P.h; P.on = true; P.groundT = 0.14; P.coyote = COYOTE; }
+      if (dirY > 0) {
+        P.y = Math.floor((P.y + P.h) / TS) * TS - P.h; P.on = true; P.groundT = 0.14; P.coyote = COYOTE;
+        if (fallV > 420) { shake = 0.35; puff(P.x + P.w / 2, P.y + P.h, 8, '#e3cf9e'); sfx('stomp'); }   /* هبوط ثقيل */
+      }
       else { P.y = (Math.floor(P.y / TS) + 1) * TS; }
       P.vy = 0;
     }
@@ -451,11 +456,16 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         for (var kk2 = 0; kk2 < 14; kk2++) particles.push({ x: near.x + near.w / 2, y: near.y + 10, vx: rnd(-130, 130), vy: rnd(-150, -10), life: 0.55, c: kk2 % 2 ? '#ffd166' : '#e3cf9e', r: 2.4 });
       } else {
         P.cd = 0.42; P.throwT = 0.26;
-        proj.push({ x: P.x + P.w / 2 + P.face * 12, y: P.y + P.h * 0.34, vx: P.face * 430, vy: -35, rot: 0, spin: 11 * P.face, life: 1.7 });
+        proj.push({ x: P.x + P.w / 2 + P.face * 12, y: P.y + P.h * 0.34, vx: P.face * 430, vy: -35, rot: 0, spin: 11 * P.face, life: 1.7, home: false });
         sfx('throw');
       }
     }
 
+    /* شحن الضربة الخاصة */
+    if (charging) {
+      chargeT = Math.min(1.4, chargeT + dt);
+      if (Math.random() < 0.8) particles.push({ x: P.x + P.w / 2 + rnd(-26, 26), y: P.y + rnd(0, P.h + 16), vx: rnd(-16, 16), vy: rnd(-110, -40), life: 0.5, c: Math.random() < 0.5 ? '#ffd166' : '#ffffff', r: rnd(1.6, 3.2) });
+    }
     /* وضع الغضب: دوران يدمّر كل عدو قريب + مناعة */
     if (P.rageT > 0) {
       P.rageT -= dt;
@@ -463,7 +473,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       for (var rq = 0; rq < foes.length; rq++) {
         var fr = foes[rq];
         if (fr.dead > 0) continue;
-        if (Math.abs((fr.x + fr.w / 2) - (P.x + P.w / 2)) < 78 && Math.abs(fr.y - P.y) < 60) {
+        if (Math.abs((fr.x + fr.w / 2) - (P.x + P.w / 2)) < P.spinR && Math.abs(fr.y - P.y) < P.spinR * 0.8) {
           fr.dead = 99; gems += 5; sfx('stomp'); shake = 0.3;
           floats.push({ x: fr.x + fr.w / 2, y: fr.y, txt: '+٥', life: 0.9, c: '#7fc4ff' });
           for (var rp = 0; rp < 10; rp++) particles.push({ x: fr.x + fr.w / 2, y: fr.y + 8, vx: rnd(-140, 140), vy: rnd(-140, -10), life: 0.5, c: '#7fc4ff', r: 2.4 });
@@ -479,8 +489,19 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     for (var pi = proj.length - 1; pi >= 0; pi--) {
       var pr = proj[pi];
       pr.x += pr.vx * dt; pr.y += pr.vy * dt; pr.vy += 300 * dt; pr.rot += pr.spin * dt; pr.life -= dt;
-      var hitWall = hitBox(pr.x - 7, pr.y - 7, 14, 14);
-      if (hitWall) { pr.life = 0; puff(pr.x, pr.y, 5, '#e3cf9e'); sfx('glide'); }
+      /* يرجع للبطل مثل البوميرانغ */
+      if (!pr.home && (pr.life < 1.15 || pr.vx * P.face < 0)) pr.home = true;
+      if (pr.home) {
+        var tx = P.x + P.w / 2, ty = P.y + P.h * 0.45;
+        var bx = tx - pr.x, by = ty - pr.y, bd = Math.sqrt(bx * bx + by * by) || 1;
+        pr.vx += (bx / bd) * 2100 * dt; pr.vy += (by / bd) * 2100 * dt;
+        pr.vx *= 0.985; pr.vy *= 0.985;
+        if (pr.vx > 520) pr.vx = 520; else if (pr.vx < -520) pr.vx = -520;
+        if (bd < 20) { pr.life = 0; sfx('gem'); }
+      } else {
+        var hitWall = hitBox(pr.x - 7, pr.y - 7, 14, 14);
+        if (hitWall) { pr.home = true; pr.vx = -pr.vx * 0.45; puff(pr.x, pr.y, 5, '#e3cf9e'); sfx('glide'); }
+      }
       for (var fi = 0; fi < foes.length; fi++) {
         var ff2 = foes[fi];
         if (ff2.dead > 0) continue;
@@ -791,7 +812,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
       glide: P.gliding,
       alpha: a,
-      frame: P.winT > 0 ? 'win' : P.smashT > 0 ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
+      frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
       lift: lift, stretch: stretch, squash: squash, lean: lean,
       spin: P.rageT > 0 ? Math.sin(tGlobal * 22) * 0.05 : 0
     });
@@ -806,15 +827,23 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     $('hTime').textContent = fmtT(time);
     var rb = $('rageBar'); if (rb) { rb.style.width = Math.round(rage) + '%'; }
     var rp = $('hRagePill'); if (rp) { rp.classList.toggle('full', rage >= 100); }
-    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); }
+    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); kr.classList.toggle('charging', charging); }
   }
-  function tryRage() {
-    if (state !== 'play' || rage < 100 || P.rageT > 0 || P.dead) return;
-    rage = 0; P.rageT = 6; P.inv = 6; sfx('win'); shake = 0.6;
-    rings.push({ x: P.x + P.w / 2, y: P.y + P.h * 0.7, r: 22, life: 0.9 });
-    floats.push({ x: P.x + P.w / 2, y: P.y - 14, txt: '🔥 وضع الغضب!', life: 1.3, c: '#ffd166' });
-    hud();
+  function rageReady() { return state === 'play' && rage >= 100 && P.rageT <= 0 && !P.dead; }
+  function chargeStart() { if (rageReady()) { charging = true; chargeT = 0; } }
+  function chargeRelease() {
+    if (!charging) return;
+    charging = false;
+    if (!rageReady()) { chargeT = 0; return; }
+    var power = clamp(chargeT / 1.1, 0.35, 1);
+    rage = 0; P.inv = 8; shake = 0.7; sfx('win');
+    P.rageT = 3.4 + 3.6 * power;
+    P.spinR = 66 + 52 * power;
+    rings.push({ x: P.x + P.w / 2, y: P.y + P.h * 0.7, r: 24, life: 1.0 });
+    floats.push({ x: P.x + P.w / 2, y: P.y - 16, txt: power > 0.85 ? '⚡ ضربة قاضية!' : '🔥 وضع الغضب!', life: 1.4, c: '#ffd166' });
+    chargeT = 0; hud();
   }
+  function tryRage() { chargeStart(); setTimeout(chargeRelease, 10); }
   function fmtT(t) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
   function startGame() {
     lives = MAXLIVES; gems = 0; rage = 0; loadLevel(0);
@@ -890,7 +919,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   $('bHome2').onclick = function () { show('ovOver', false); state = 'title'; show('ovTitle', true); loadLevel(0); hud(); };
   $('bHome3').onclick = function () { show('ovWin', false); state = 'title'; show('ovTitle', true); loadLevel(0); hud(); };
   $('bPause').onclick = function () { pause(state === 'play'); };
-  $('kRage').addEventListener('pointerdown', function (e) { e.preventDefault(); tryRage(); });
+  $('kRage').addEventListener('pointerdown', function (e) { e.preventDefault(); chargeStart(); });
+  $('kRage').addEventListener('pointerup', function (e) { e.preventDefault(); chargeRelease(); });
+  $('kRage').addEventListener('pointercancel', function (e) { e.preventDefault(); chargeRelease(); });
   $('bMute').onclick = function () {
     muted = !muted; $('bMute').textContent = muted ? '🔇' : '🔊';
     try { localStorage.setItem('sinbad.mute', muted ? '1' : '0'); } catch (e) {}
