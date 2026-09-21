@@ -136,7 +136,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 (function () {
   'use strict';
   var TS = 32, ROWS = 14;                    // حجم البلاطة وارتفاع المرحلة
-  var GRAV = 1560, MAXFALL = 740, SPD = 172, ACC = 1180, FRIC = 2100;   /* ثقيل: أبطأ وأثقل */
+  var GRAV = 1560, MAXFALL = 760, SPD = 200, ACC = 1450, FRIC = 2200;   /* ثقيل لكن ما يبطّئ اللعب */
   var JUMP = -600, CUT = 0.45, GLIDE = 85, COYOTE = 0.1, JBUF = 0.12;
   var MAXLIVES = 3;
 
@@ -249,7 +249,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
       /* شبحة الإطار السابق — تعطي إحساس سرعة وانسيابية */
       if (opt.ghost && HERO.runSheet) {
-        g.globalAlpha = 0.22 * (opt.alpha == null ? 1 : opt.alpha);
+        g.globalAlpha = 0.13 * (opt.alpha == null ? 1 : opt.alpha);
         var rg = ((rf - 1) % n + n) % n;
         g.drawImage(HERO.runSheet, Math.round(rg * fw), 0, Math.round(fw), fh, dx + 3, dy, Math.round(tw3), Math.round(th3));
         g.globalAlpha = (opt.alpha == null ? 1 : opt.alpha);
@@ -843,8 +843,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
       glide: P.gliding,
       alpha: a,
-      runFrame: Math.floor(P.dist / 12.2),
-      phase: (P.dist / 12.2) % 1,
+      runFrame: Math.floor(P.dist / 14.0),
+      phase: (P.dist / 14.0) % 1,
       ghost: running && Math.abs(P.vx) > 60,
       frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
       lift: lift, stretch: stretch, squash: squash, lean: lean,
@@ -861,7 +861,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     $('hTime').textContent = fmtT(time);
     var rb = $('rageBar'); if (rb) { rb.style.width = Math.round(rage) + '%'; }
     var rp = $('hRagePill'); if (rp) { rp.classList.toggle('full', rage >= 100); }
-    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); kr.classList.toggle('charging', charging); }
+    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); kr.classList.toggle('charging', charging); }
+    var kt = $('kT'); if (kt) { kt.classList.toggle('cool', P.cd > 0.02); }
   }
   function rageReady() { return state === 'play' && rage >= 100 && P.rageT <= 0 && !P.dead; }
   function chargeStart() { if (rageReady()) { charging = true; chargeT = 0; } }
@@ -981,14 +982,16 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   window.addEventListener('orientationchange', function () { setTimeout(resize, 250); });
 
   /* ---------- الحلقة ---------- */
-  var last = 0, acc = 0, STEP = 1 / 120;
+  var last = 0, acc = 0, STEP = 1 / 120, hudT = 0;
   function loop(ts) {
     if (!last) last = ts;
     var dt = Math.min(0.05, (ts - last) / 1000); last = ts;
     acc += dt;
     var guard = 0;
     while (acc >= STEP && guard++ < 12) { update(STEP); acc -= STEP; }
-    if (state === 'play') { hud(); if ($('kT')) { $('kT').classList.toggle('cool', P.cd > 0); } }
+    /* تحديث الواجهة ٧ مرات بالثانية بدل ١٢٠ — يمنع التقطيع على الجوال */
+    hudT += dt;
+    if (hudT >= 0.14) { hudT = 0; if (state === 'play' || state === 'pause') { hud(); } }
     draw();
     requestAnimationFrame(loop);
   }
@@ -1000,6 +1003,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   requestAnimationFrame(loop);
   window.__game = { start: startGame, load: loadLevel, get state() { return state; }, get p() { return P; }, keys: keys, get gems() { return gems; }, get lives() { return lives; }, get level() { return level; }, get cam() { return cam; }, next: nextLevel, setState: function (s) { state = s; }, jump: function () { P.vy = JUMP; },
     get rage() { return rage; }, setRage: function (v) { rage = v; hud(); },
+
+    get view() { return { w: view.w, h: view.h, k: view.k, cx: cam.x, cy: cam.y, cw: cv.width, ch: cv.height }; },
 
     get hero() { return { ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
 })();
