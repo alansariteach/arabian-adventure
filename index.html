@@ -216,7 +216,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     try { if (LOOK.img) localStorage.setItem('sinbad.lookimg', LOOK.img); else localStorage.removeItem('sinbad.lookimg'); } catch (e) {}
   }
   /* ---------- شخصية اللاعب (صور) ---------- */
-  var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, runN: 8, ready: false };
+  var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, board: null, runN: 8, ready: false };
   (function loadHero() {
     var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png?v=11';
     var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png?v=11';
@@ -225,10 +225,31 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png?v=11';
     var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png?v=11';
     var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png?v=11';
+    var bd = new Image(); bd.onload = function () { HERO.board = bd; HERO.ready = true; }; bd.src = 'hero_board.webp?v=12';
     var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=11';
   })();
   function drawHeroSprite(g, x, y, w, h, face, frame, opt) {
     opt = opt || {};
+    /* ---------- لوح الركوب: وضعية ثابتة + إحساس الحركة من اللوح ---------- */
+    if (frame === 'board' && HERO.board) {
+      var bimg = HERO.board;
+      var bth = h * 3.05, btw = bth * (bimg.width / bimg.height);
+      var bcx = Math.round(x + w / 2);
+      var hover = -Math.abs(Math.sin(tGlobal * 3.3)) * 1.7 - 1.8;   /* طفو + نطة */
+      var bby = Math.round(y + h + hover);
+      var bln = (opt.boardLean || 0);
+      g.save();
+      /* ظل بيضاوي تحت اللوح */
+      g.globalAlpha = 0.18 * (opt.alpha == null ? 1 : opt.alpha);
+      g.fillStyle = '#3a2a12';
+      g.beginPath(); g.save(); g.translate(bcx, y + h + 1.5); g.scale(1, 0.16); g.arc(0, 0, btw * 0.30, 0, Math.PI * 2); g.restore(); g.fill();
+      g.globalAlpha = (opt.alpha == null ? 1 : opt.alpha);
+      g.translate(bcx, bby); g.scale(face, 1);
+      if (bln) g.rotate(bln);
+      g.drawImage(bimg, Math.round(-btw / 2), -Math.round(bth), Math.round(btw), Math.round(bth));
+      g.restore(); g.globalAlpha = 1;
+      return true;
+    }
     /* دورة الركض من الـ sprite sheet (٨ إطارات) */
     if (frame === 'run' && HERO.runSheet && HERO.runN) {
       var n = HERO.runN, fw = HERO.runSheet.width / n, fh = HERO.runSheet.height;
@@ -830,29 +851,31 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var spd = Math.abs(P.vx);
     runLatch = (keys.l || keys.r);            /* الركض مربوط بالتحكم — ثابت بلا رفرفة */
     var running = runLatch && P.on;
-    var lift = 0, stretch = 0, squash = 0, lean = 0;
+    var lift = 0, stretch = 0, squash = 0, lean = 0, boardLean = 0;
     if (running) {
-      var s1 = Math.abs(Math.sin(P.anim * 3.2));
-      lift = -s1 * 2.6;                      // نطة الجري
-      stretch = s1 * 0.035;                  // تمدد بسيط
-      lean = 0.028;                          // ميل ثابت للأمام (ثابت = بلا رجفة)
-      /* غبار تحت النعل */
-      if (spd > 25 && tGlobal - lastDust > 0.1) {
+      boardLean = 0.052;                     // ميل اللوح للأمام = اندفاع
+      /* رشّة رمل/ماء خلف اللوح */
+      if (spd > 25 && tGlobal - lastDust > 0.055) {
         lastDust = tGlobal;
-        particles.push({ x: P.x + P.w / 2 - P.face * 8, y: P.y + P.h - 2, vx: -P.face * rnd(15, 45), vy: rnd(-25, -2), life: 0.35, c: '#e3cf9e', r: rnd(1.6, 3) });
+        particles.push({ x: P.x + P.w / 2 - P.face * 13, y: P.y + P.h - 1, vx: -P.face * rnd(40, 110), vy: rnd(-38, -4), life: 0.42, c: '#efe0b8', r: rnd(1.4, 3.2) });
+        particles.push({ x: P.x + P.w / 2 - P.face * 11, y: P.y + P.h - 1, vx: -P.face * rnd(20, 70), vy: rnd(-18, -1), life: 0.3, c: '#cfe8f5', r: rnd(1, 2.2) });
       }
     } else if (!P.on) {
-      lean = 0.03;
-      stretch = clamp(-P.vy * 0.00018, -0.05, 0.07);   // تمدد بالنزول
+      boardLean = clamp(-P.vy * 0.00017, -0.10, 0.13);   // يميل مع الطيران/النزول
+      if (P.gliding && tGlobal - lastDust > 0.08) {
+        lastDust = tGlobal;
+        particles.push({ x: P.x + P.w / 2 - P.face * 12, y: P.y + P.h - 4, vx: -P.face * rnd(30, 80), vy: rnd(-10, 20), life: 0.35, c: '#ffe9a8', r: rnd(1, 2.6) });
+      }
     }
     drawChar(ctx, P.x, P.y, P.w, P.h, P.face, LOOK, {
-      bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
+      bob: 0,
       glide: P.gliding,
       alpha: a,
       runFrame: Math.floor(P.dist / 14.0),
       phase: (P.dist / 14.0) % 1,
-      ghost: running && Math.abs(P.vx) > 60,
-      frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
+      ghost: false,
+      frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : 'board',
+      boardLean: boardLean,
       lift: lift, stretch: stretch, squash: squash, lean: lean,
       spin: P.rageT > 0 ? Math.sin(tGlobal * 22) * 0.05 : 0
     });
