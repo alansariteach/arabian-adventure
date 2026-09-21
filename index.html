@@ -218,14 +218,14 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- شخصية اللاعب (صور) ---------- */
   var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, runN: 8, ready: false };
   (function loadHero() {
-    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png';
-    var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png';
-    var c = new Image(); c.onload = function () { HERO.i3 = c; }; c.src = 'hero_throw.png';
-    var s = new Image(); s.onload = function () { HERO.slip = s; }; s.src = 'slipper.png';
-    var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png';
-    var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png';
-    var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png';
-    var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp';
+    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png?v=9';
+    var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png?v=9';
+    var c = new Image(); c.onload = function () { HERO.i3 = c; }; c.src = 'hero_throw.png?v=9';
+    var s = new Image(); s.onload = function () { HERO.slip = s; }; s.src = 'slipper.png?v=9';
+    var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png?v=9';
+    var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png?v=9';
+    var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png?v=9';
+    var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=9';
   })();
   function drawHeroSprite(g, x, y, w, h, face, frame, opt) {
     opt = opt || {};
@@ -985,7 +985,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   $('bestTag').textContent = best > 0 ? ('أفضل نتيجة عندك: 💎 ' + best) : 'أول مرة تلعب؟ بالتوفيق يا قبطان ⛵';
   requestAnimationFrame(loop);
   window.__game = { start: startGame, load: loadLevel, get state() { return state; }, get p() { return P; }, keys: keys, get gems() { return gems; }, get lives() { return lives; }, get level() { return level; }, get cam() { return cam; }, next: nextLevel, setState: function (s) { state = s; }, jump: function () { P.vy = JUMP; },
-    get rage() { return rage; }, setRage: function (v) { rage = v; hud(); }, tryRage: tryRage, get proj() { return proj; } };
+    get rage() { return rage; }, setRage: function (v) { rage = v; hud(); },
+    get hero() { return { ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
 })();
 </script>
 </body>
