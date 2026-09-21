@@ -655,16 +655,16 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var a = (P.inv > 0 && Math.floor(tGlobal * 16) % 2 === 0) ? 0.45 : 1;
     /* إطار الركض: مع فاصل (hysteresis) حتى لا يرفّ بين الإطارين */
     var spd = Math.abs(P.vx);
-    if (spd > 30) runLatch = true; else if (spd < 12) runLatch = false;
+    runLatch = (keys.l || keys.r);            /* الركض مربوط بالتحكم — ثابت بلا رفرفة */
     var running = runLatch && P.on;
     var lift = 0, stretch = 0, squash = 0, lean = 0;
     if (running) {
       var s1 = Math.abs(Math.sin(P.anim * 3.2));
       lift = -s1 * 2.6;                      // نطة الجري
       stretch = s1 * 0.035;                  // تمدد بسيط
-      lean = 0.055;                          // ميل ثابت للأمام (ثابت = بلا رجفة)
+      lean = 0.028;                          // ميل ثابت للأمام (ثابت = بلا رجفة)
       /* غبار تحت النعل */
-      if (tGlobal - lastDust > 0.1) {
+      if (spd > 25 && tGlobal - lastDust > 0.1) {
         lastDust = tGlobal;
         particles.push({ x: P.x + P.w / 2 - P.face * 8, y: P.y + P.h - 2, vx: -P.face * rnd(15, 45), vy: rnd(-25, -2), life: 0.35, c: '#e3cf9e', r: rnd(1.6, 3) });
       }
