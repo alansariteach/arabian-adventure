@@ -216,7 +216,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     try { if (LOOK.img) localStorage.setItem('sinbad.lookimg', LOOK.img); else localStorage.removeItem('sinbad.lookimg'); } catch (e) {}
   }
   /* ---------- شخصية اللاعب (صور) ---------- */
-  var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, board: null, runN: 8, ready: false };
+  var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, board: null, boardIdle: null, runN: 8, ready: false };
   (function loadHero() {
     var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png?v=11';
     var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png?v=11';
@@ -226,14 +226,63 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png?v=11';
     var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png?v=11';
     var bd = new Image(); bd.onload = function () { HERO.board = bd; HERO.ready = true; }; bd.src = 'hero_board.webp?v=12';
+    var bi = new Image(); bi.onload = function () { HERO.boardIdle = bi; }; bi.src = 'hero_board_idle.webp?v=1';
     var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=11';
   })();
+
+  /* ---------- لوح ركوب مرسوم برمجياً (نظيف وبألوان الأصل) ---------- */
+  function drawBoardShape(g, cx, by, wdt, hgt) {
+    var w2 = wdt / 2, hh = hgt;
+    /* 1) الهيكل (حرف اللوح) أزرق غامق */
+    g.beginPath();
+    g.moveTo(cx - w2, by - hh * 0.30);
+    g.quadraticCurveTo(cx - w2 * 0.45, by + hh * 0.78, cx, by + hh * 0.78);
+    g.quadraticCurveTo(cx + w2 * 0.45, by + hh * 0.78, cx + w2, by - hh * 0.30);
+    g.quadraticCurveTo(cx + w2 * 0.45, by - hh * 1.12, cx, by - hh * 1.02);
+    g.quadraticCurveTo(cx - w2 * 0.45, by - hh * 1.12, cx - w2, by - hh * 0.30);
+    g.closePath();
+    var g0 = g.createLinearGradient(0, by - hh, 0, by + hh * 0.78);
+    g0.addColorStop(0, '#0e63bd'); g0.addColorStop(0.45, '#0a4d9c'); g0.addColorStop(1, '#083a78');
+    g.fillStyle = g0; g.fill();
+    /* 2) سطح اللوح (تركوازي) */
+    g.beginPath();
+    g.moveTo(cx - w2 * 0.99, by - hh * 0.36);
+    g.quadraticCurveTo(cx - w2 * 0.45, by + hh * 0.46, cx, by + hh * 0.46);
+    g.quadraticCurveTo(cx + w2 * 0.45, by + hh * 0.46, cx + w2 * 0.99, by - hh * 0.36);
+    g.quadraticCurveTo(cx + w2 * 0.45, by - hh * 1.04, cx, by - hh * 0.96);
+    g.quadraticCurveTo(cx - w2 * 0.45, by - hh * 1.04, cx - w2 * 0.99, by - hh * 0.36);
+    g.closePath();
+    var g2 = g.createLinearGradient(0, by - hh * 0.92, 0, by + hh * 0.46);
+    g2.addColorStop(0, '#12c0b8'); g2.addColorStop(1, '#06a4a3');
+    g.fillStyle = g2; g.fill();
+    /* 3) خطوط فاتحة مائلة */
+    g.beginPath();
+    g.moveTo(cx - w2 * 0.72, by - hh * 0.44);
+    g.quadraticCurveTo(cx - w2 * 0.10, by + hh * 0.34, cx + w2 * 0.72, by - hh * 0.56);
+    g.quadraticCurveTo(cx + w2 * 0.10, by + hh * 0.10, cx - w2 * 0.72, by - hh * 0.44);
+    g.closePath();
+    g.fillStyle = 'rgba(200,236,255,0.78)'; g.fill();
+    g.beginPath();
+    g.moveTo(cx - w2 * 0.28, by - hh * 0.70);
+    g.quadraticCurveTo(cx + w2 * 0.30, by + hh * 0.10, cx + w2 * 0.92, by - hh * 0.60);
+    g.quadraticCurveTo(cx + w2 * 0.30, by - hh * 0.28, cx - w2 * 0.28, by - hh * 0.70);
+    g.closePath();
+    g.fillStyle = 'rgba(178,222,250,0.5)'; g.fill();
+    /* 4) لمعة على الحرف العلوي */
+    g.beginPath();
+    g.moveTo(cx - w2 * 0.96, by - hh * 0.40);
+    g.quadraticCurveTo(cx, by - hh * 1.06, cx + w2 * 0.96, by - hh * 0.40);
+    g.quadraticCurveTo(cx, by - hh * 0.90, cx - w2 * 0.96, by - hh * 0.40);
+    g.closePath();
+    g.fillStyle = 'rgba(255,255,255,0.28)'; g.fill();
+  }
+
   function drawHeroSprite(g, x, y, w, h, face, frame, opt) {
     opt = opt || {};
     /* ---------- لوح الركوب: وضعية ثابتة + إحساس الحركة من اللوح ---------- */
     if (frame === 'board' && HERO.board) {
-      var bimg = HERO.board;
-      var bth = h * 3.05, btw = bth * (bimg.width / bimg.height);
+      var bimg = (opt.boardIdle && HERO.boardIdle) ? HERO.boardIdle : HERO.board;
+      var bth = h * 2.50, btw = bth * (bimg.width / bimg.height);
       var bcx = Math.round(x + w / 2);
       var hover = -Math.abs(Math.sin(tGlobal * 3.3)) * 1.7 - 1.8;   /* طفو + نطة */
       var bby = Math.round(y + h + hover);
@@ -293,10 +342,15 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     else if (frame === 'win' && HERO.win) img = HERO.win;
     if (!img) return false;
     var st = 1 + (opt.stretch || 0);
-    var th = h * 2.15 * st, tw = th * (img.width / img.height) * (1 - (opt.squash || 0));
+    var onBoard = (frame === 'throw' || frame === 'smash' || frame === 'spin' || frame === 'win');
+    var bLift = onBoard ? h * 0.19 : 0;          /* البطل واقف على اللوح */
+    var th = (onBoard ? h * 1.92 : h * 2.15) * st, tw = th * (img.width / img.height) * (1 - (opt.squash || 0));
     /* تقريب الموضع لبكسل صحيح — يمنع الرجفة (shimmer) */
-    var cx = Math.round(x + w / 2), by = Math.round(y + h + (opt.lift || 0));
+    var cx = Math.round(x + w / 2), by = Math.round(y + h + (opt.lift || 0) - bLift);
     g.save();
+    if (onBoard) {                                /* اللوح ما ينشال وقت الرمي/الضرب */
+      drawBoardShape(g, cx, y + h - 1.0, h * 2.85, h * 0.26);
+    }
     g.translate(cx, by);
     g.scale(face, 1);
     if (opt.lean) g.rotate(opt.lean * face);
@@ -793,7 +847,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         g.fillStyle = '#ffd166'; g.fillRect(-17, -6.5, 34, 2.2);
         g.restore();
       }
-      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, phase: opt.phase, ghost: opt.ghost, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin })) return;
+      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, phase: opt.phase, ghost: opt.ghost, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin, boardIdle: opt.boardIdle, boardLean: opt.boardLean })) return;
       g.save(); g.translate(bx + bw / 2, by + bh); g.scale(face * u, u);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
     }
@@ -876,6 +930,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       ghost: false,
       frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : 'board',
       boardLean: boardLean,
+      boardIdle: (!running && P.on && !P.gliding && P.throwT <= 0 && P.smashT <= 0 && P.rageT <= 0 && P.winT <= 0 && !charging),
       lift: lift, stretch: stretch, squash: squash, lean: lean,
       spin: P.rageT > 0 ? Math.sin(tGlobal * 22) * 0.05 : 0
     });
@@ -1036,7 +1091,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 
     get view() { return { w: view.w, h: view.h, k: view.k, cx: cam.x, cy: cam.y, cw: cv.width, ch: cv.height }; },
 
-    get hero() { return { ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
+    get hero() { return { board: !!HERO.board, boardIdle: !!HERO.boardIdle, ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
 })();
 </script>
 </body>
