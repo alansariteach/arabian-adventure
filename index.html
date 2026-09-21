@@ -218,14 +218,14 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- شخصية اللاعب (صور) ---------- */
   var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, runSheet: null, runN: 8, ready: false };
   (function loadHero() {
-    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png?v=10';
-    var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png?v=10';
-    var c = new Image(); c.onload = function () { HERO.i3 = c; }; c.src = 'hero_throw.png?v=10';
-    var s = new Image(); s.onload = function () { HERO.slip = s; }; s.src = 'slipper.png?v=10';
-    var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png?v=10';
-    var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png?v=10';
-    var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png?v=10';
-    var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=10';
+    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png?v=11';
+    var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png?v=11';
+    var c = new Image(); c.onload = function () { HERO.i3 = c; }; c.src = 'hero_throw.png?v=11';
+    var s = new Image(); s.onload = function () { HERO.slip = s; }; s.src = 'slipper.png?v=11';
+    var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png?v=11';
+    var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png?v=11';
+    var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png?v=11';
+    var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=11';
   })();
   function drawHeroSprite(g, x, y, w, h, face, frame, opt) {
     opt = opt || {};
@@ -241,12 +241,12 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       /* طور الخطوة: ٨ إطارات = دورتين كاملتين (كل خطوة نطة) */
       var stridePh = (opt.runFrame || 0) + (opt.phase || 0);
       var sp2 = stridePh * 0.25 * Math.PI * 2;          /* دورتين لكل دورة ركض */
-      var bob = -Math.abs(Math.sin(sp2)) * 3.1;      /* نطة الجسم مع كل خطوة */
-      var stretch = 1 + Math.abs(Math.sin(sp2)) * 0.03;
-      var lean2 = Math.sin(sp2) * 0.016;             /* ميل خفيف متزامن */
+      var bob = 0;   /* اللوحة الجديدة فيها نطة الجسم — لا نضيف فوقها */
+      var stretch = 1;
+      var lean2 = 0;
       var th3 = th2 * stretch, tw3 = tw2 * stretch;
       var by2 = Math.round(y + h + bob);
-      var lx2 = Math.sin(sp2) * 1.4;    /* تمايل أفقي بسيط */
+      var lx2 = 0;
       var dx = Math.round(-tw3 / 2), dy = -th3;
       g.save();
       g.translate(cx2, by2); g.scale(face, 1);
@@ -255,7 +255,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
       /* شبحة الإطار السابق — تعطي إحساس سرعة وانسيابية */
       if (opt.ghost && HERO.runSheet) {
-        g.globalAlpha = 0.13 * (opt.alpha == null ? 1 : opt.alpha);
+        g.globalAlpha = 0.10 * (opt.alpha == null ? 1 : opt.alpha);
         var rg = ((rf - 1) % n + n) % n;
         g.drawImage(HERO.runSheet, Math.round(rg * fw), 0, Math.round(fw), fh, dx + 3, dy, Math.round(tw3), Math.round(th3));
         g.globalAlpha = (opt.alpha == null ? 1 : opt.alpha);
