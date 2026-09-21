@@ -27,11 +27,20 @@ body{background:linear-gradient(180deg,#0f2a4e 0%,#17335c 45%,#2a4f78 100%) fixe
 canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:#17335c}
 #pad{width:100%;max-width:900px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px;direction:ltr}
 .side{display:flex;gap:10px}
-.k{width:88px;height:88px;border-radius:26px;border:1px solid #ffffff33;background:#ffffff1f;color:#fff;
-  font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;
+.k{width:62px;height:62px;border-radius:20px;border:1px solid #ffffff33;background:#ffffff1f;color:#fff;
+  font-size:26px;font-weight:700;display:flex;align-items:center;justify-content:center;cursor:pointer;
   touch-action:none;transition:transform .06s,background .12s}
 .k:active,.k.on{background:#ffd16633;border-color:#ffd16699;transform:scale(.94)}
-.k.jump{width:112px;background:#ffd16626;border-color:#ffd16666;font-size:28px}
+.k.jump{width:86px;background:#ffd16626;border-color:#ffd16666;font-size:22px;height:76px}
+.k.throw{width:74px;background:#2f7fbd26;border-color:#7fc4ff66;font-size:18px;height:76px}
+.k.throw.cool{opacity:.35}
+.k.rage{width:50px;font-size:22px;background:#ffffff14;opacity:.45}
+.k.rage.armed{opacity:1;background:#ff9a3c2e;border-color:#ffd16699;box-shadow:0 0 16px #ff9a3c66}
+.ragepill{display:inline-flex;align-items:center;gap:6px}
+.rbar{display:inline-block;width:52px;height:7px;border-radius:4px;background:#ffffff2e;overflow:hidden}
+.rbar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9a3c,#ffd166);transition:width .15s}
+.ragepill.full{background:#ff9a3c33;border-color:#ffd16699}
+.winimg{height:132px;margin:0 0 6px;filter:drop-shadow(0 10px 22px #0007)}
 /* شاشات */
 .ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   text-align:center;padding:22px;background:radial-gradient(700px 420px at 50% 20%,#1d4474f2,#0b1a2ef7);z-index:20}
@@ -58,6 +67,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     <span class="pill" id="hLevel">المرحلة ١</span>
     <span class="pill hearts" id="hLives">♥♥♥</span>
     <span class="pill" id="hGems">💎 0</span>
+    <span class="pill ragepill" id="hRagePill"><span>🔥</span><span class="rbar"><i id="rageBar"></i></span></span>
     <span class="pill" id="hTime">0:00</span>
     <span class="sp"></span>
     <button id="bMute" title="الصوت">🔊</button>
@@ -69,7 +79,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       <div class="k" id="kL">◀</div>
       <div class="k" id="kR">▶</div>
     </div>
+    <div class="side"><div class="k rage" id="kRage">🔥</div></div>
     <div class="side">
+      <div class="k throw" id="kT">ارمِ 🩴</div>
       <div class="k jump" id="kJ">اقفز</div>
     </div>
   </div>
@@ -78,10 +90,10 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 <div class="ov" id="ovTitle">
   <h1>سندباد — رحلة الكنز</h1>
   <p>اجمع الجواهر، اقفز على الأعداء، واوصل لصندوق الكنز في نهاية كل مرحلة.<br>
-  <b style="color:#ffd166">البساط الطائر:</b> اضغط «اقفز» واستمر ضاغطاً وأنت نازل — سندباد يطير بالبساط!</p>
+  <b style="color:#ffd166">الشحّاطة 🩴:</b> «ارمِ» = رمي من بعيد · وإذا العدو قريب تصير <b style="color:#ffd166">ضربة قوية</b>.<br><b style="color:#ff9a3c">الغضب 🔥:</b> كل ما تطيح عدو أو تجمع جوهرة يعمر الغضب — ولمن يوصل ١٠٠% اضغط زر الغضب: <b style="color:#7fc4ff">دوران يطيح كل عدو حولك</b> ومناعة ٦ ثواني!<br><b style="color:#ffd166">البساط الطائر:</b> اضغط «اقفز» واستمر ضاغطاً وأنت نازل — يطير بالبساط!</p>
   <div class="keys">
     الجوال: <b>◀ ▶</b> للحركة · <b>اقفز</b> للقفز (اضغط مطوّل = طيران)<br>
-    الكمبيوتر: <b>الأسهم</b> أو <b>A/D</b> · <b>مسافة</b> للقفز · <b>P</b> للإيقاف
+    الكمبيوتر: <b>الأسهم</b> · <b>مسافة</b> قفز · <b>F</b> رمي الشحّاطة · <b>P</b> إيقاف
   </div>
   <button class="btn" id="bStart">ابدأ اللعب</button>
   <div class="tag" id="bestTag"></div>
@@ -95,6 +107,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 </div>
 
 <div class="ov" id="ovClear" hidden>
+  <img class="winimg" id="clearImg" src="hero_win.png" alt="">
   <h2 id="clearTitle">خلصت المرحلة!</h2>
   <div class="stats" id="clearStats"></div>
   <button class="btn" id="bNext">المرحلة التالية</button>
@@ -109,6 +122,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 </div>
 
 <div class="ov" id="ovWin" hidden>
+  <img class="winimg" id="winImg" src="hero_win.png" alt="">
   <h1>🏆 خلّصت اللعبة!</h1>
   <p>سندباد وصل لآخر كنز. أحسنت يا قبطان!</p>
   <div class="stats" id="winStats"></div>
@@ -186,9 +200,10 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- حالة اللعبة ---------- */
   var state = 'title', level = 0, lives = MAXLIVES, gems = 0, time = 0;
   var solids, hazards, gemList, foes, goal, spawn, mapW, mapH, cam = { x: 0 };
-  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, groundT: 0, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
-  var keys = { l: false, r: false, j: false };
+  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, groundT: 0, smashT: 0, rageT: 0, winT: 0, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
+  var keys = { l: false, r: false, j: false, k: false };
   var particles = [], floats = [], tGlobal = 0, shake = 0, runLatch = false, lastDust = 0;
+  var proj = [], rage = 0, rings = [];
   var best = 0, muted = false;
   /* ---------- شكل الشخصية (قابل للتخصيص من المستخدم) ---------- */
   var LOOK = { skin: '#e8b98a', hat: 'turban', hatCol: '#fdfaf4', tunic: '#1f7a5a', pants: '#5a3a12', sash: '#d94f3d', carpet: '#b3202f', img: null };
@@ -200,16 +215,24 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     try { if (LOOK.img) localStorage.setItem('sinbad.lookimg', LOOK.img); else localStorage.removeItem('sinbad.lookimg'); } catch (e) {}
   }
   /* ---------- شخصية اللاعب (صور) ---------- */
-  var HERO = { i1: null, i2: null, ready: false };
+  var HERO = { i1: null, i2: null, i3: null, slip: null, smash: null, spin: null, win: null, ready: false };
   (function loadHero() {
-    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; };
-    a.src = 'hero_idle.png';
-    var b = new Image(); b.onload = function () { HERO.i2 = b; };
-    b.src = 'hero_run.png';
+    var a = new Image(); a.onload = function () { HERO.i1 = a; HERO.ready = true; }; a.src = 'hero_idle.png';
+    var b = new Image(); b.onload = function () { HERO.i2 = b; }; b.src = 'hero_run.png';
+    var c = new Image(); c.onload = function () { HERO.i3 = c; }; c.src = 'hero_throw.png';
+    var s = new Image(); s.onload = function () { HERO.slip = s; }; s.src = 'slipper.png';
+    var d1 = new Image(); d1.onload = function () { HERO.smash = d1; }; d1.src = 'hero_smash.png';
+    var d2 = new Image(); d2.onload = function () { HERO.spin = d2; }; d2.src = 'hero_spin.png';
+    var d3 = new Image(); d3.onload = function () { HERO.win = d3; }; d3.src = 'hero_win.png';
   })();
   function drawHeroSprite(g, x, y, w, h, face, frame, opt) {
     opt = opt || {};
-    var img = (frame === 'run' && HERO.i2) ? HERO.i2 : HERO.i1;
+    var img = HERO.i1;
+    if (frame === 'throw' && HERO.i3) img = HERO.i3;
+    else if (frame === 'run' && HERO.i2) img = HERO.i2;
+    else if (frame === 'smash' && HERO.smash) img = HERO.smash;
+    else if (frame === 'spin' && HERO.spin) img = HERO.spin;
+    else if (frame === 'win' && HERO.win) img = HERO.win;
     if (!img) return false;
     var st = 1 + (opt.stretch || 0);
     var th = h * 2.15 * st, tw = th * (img.width / img.height) * (1 - (opt.squash || 0));
@@ -219,6 +242,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     g.translate(cx, by);
     g.scale(face, 1);
     if (opt.lean) g.rotate(opt.lean * face);
+    if (opt.spin) g.rotate(opt.spin);
     if (opt.alpha != null) g.globalAlpha = opt.alpha;
     g.drawImage(img, Math.round(-tw / 2), -th, Math.round(tw), Math.round(th));
     g.restore(); g.globalAlpha = 1;
@@ -258,6 +282,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     else if (kind === 'win') { [660, 880, 1180].forEach(function (f, i) { setTimeout(function () { beep(f, 0.18, 'triangle', 0.07); }, i * 120); }); }
     else if (kind === 'over') { [400, 300, 200].forEach(function (f, i) { setTimeout(function () { beep(f, 0.25, 'sawtooth', 0.08); }, i * 150); }); }
     else if (kind === 'glide') beep(300, 0.08, 'sine', 0.03);
+    else if (kind === 'throw') { beep(240, 0.07, 'square', 0.05); setTimeout(function () { beep(160, 0.09, 'square', 0.04); }, 50); }
   }
 
   /* ---------- تحميل المرحلة ---------- */
@@ -282,7 +307,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         else if (ch === 'S') spawn = { x: x * TS + 4, y: y * TS + 2 };
       }
     }
-    P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; P.dead = false; P.win = false; P.deadT = 0; P.inv = 0; P.face = 1; P.groundT = 0.2;
+    P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; P.dead = false; P.win = false; P.deadT = 0; P.inv = 0; P.face = 1; P.groundT = 0.2; P.throwT = 0; P.cd = 0; P.smashT = 0; P.rageT = 0; P.winT = 0;
     cam.x = 0; cam.y = Math.max(0, mapH * TS - view.h); particles = []; floats = []; time = 0;
     level = i;
     hud();
@@ -321,13 +346,18 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       if (P.deadT > 1.1) respawn();
       return;
     }
-    if (P.win) { P.win = false; levelClear(); return; }
+    if (P.winT > 0) {
+      P.winT -= dt; P.vx = 0;
+      if (Math.random() < 0.5) particles.push({ x: P.x + P.w / 2 + rnd(-26, 26), y: P.y + rnd(0, P.h), vx: rnd(-40, 40), vy: rnd(-90, -20), life: 0.6, c: '#ffd166', r: rnd(1.6, 3) });
+      if (P.winT <= 0) levelClear();
+      return;
+    }
 
     /* حركة أفقية */
     var want = (keys.r ? 1 : 0) - (keys.l ? 1 : 0);
     if (want !== 0) {
       P.vx += want * ACC * dt; P.face = want;
-      P.vx = clamp(P.vx, -SPD, SPD);
+      P.vx = clamp(P.vx, -(P.rageT > 0 ? SPD * 1.35 : SPD), (P.rageT > 0 ? SPD * 1.35 : SPD));
     } else {
       var s = Math.sign(P.vx);
       P.vx -= s * FRIC * dt;
@@ -393,16 +423,81 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         if (stomp) {
           f.dead = 99; P.vy = -400; sfx('stomp'); shake = 0.25;
           floats.push({ x: f.x + f.w / 2, y: f.y, txt: '+٥', life: 0.9, c: '#ffd166' });
-          gems += 5; hud();
+          gems += 5; rage = Math.min(100, rage + 14); hud();
         } else hurt();
       }
+    }
+
+    /* رمي الشحّاطة */
+    P.cd = Math.max(0, P.cd - dt);
+    if (P.throwT > 0) P.throwT -= dt;
+    if (P.smashT > 0) P.smashT -= dt;
+    if (keys.k && P.cd <= 0 && !P.dead) {
+      /* عدو قريب؟ ضربة شحّاطة قوية. وإلا ارميها */
+      var near = null, nd = 999;
+      for (var q = 0; q < foes.length; q++) {
+        var fo = foes[q];
+        if (fo.dead > 0) continue;
+        var dx = (fo.x + fo.w / 2) - (P.x + P.w / 2);
+        if (dx * P.face > -14 && dx * P.face < 54 && Math.abs((fo.y + fo.h) - (P.y + P.h)) < 46) {
+          if (Math.abs(dx) < nd) { nd = Math.abs(dx); near = fo; }
+        }
+      }
+      if (near) {
+        P.cd = 0.34; P.smashT = 0.3; shake = 0.55;
+        near.dead = 99; sfx('stomp');
+        gems += 5; rage = Math.min(100, rage + 14); hud();
+        floats.push({ x: near.x + near.w / 2, y: near.y, txt: '🩴+٥', life: 1.0, c: '#ffd166' });
+        for (var kk2 = 0; kk2 < 14; kk2++) particles.push({ x: near.x + near.w / 2, y: near.y + 10, vx: rnd(-130, 130), vy: rnd(-150, -10), life: 0.55, c: kk2 % 2 ? '#ffd166' : '#e3cf9e', r: 2.4 });
+      } else {
+        P.cd = 0.42; P.throwT = 0.26;
+        proj.push({ x: P.x + P.w / 2 + P.face * 12, y: P.y + P.h * 0.34, vx: P.face * 430, vy: -35, rot: 0, spin: 11 * P.face, life: 1.7 });
+        sfx('throw');
+      }
+    }
+
+    /* وضع الغضب: دوران يدمّر كل عدو قريب + مناعة */
+    if (P.rageT > 0) {
+      P.rageT -= dt;
+      if (Math.random() < 0.6) particles.push({ x: P.x + P.w / 2 + rnd(-34, 34), y: P.y + rnd(0, P.h + 26), vx: rnd(-30, 30), vy: rnd(-90, -20), life: 0.5, c: Math.random() < 0.5 ? '#7fc4ff' : '#ffd166', r: rnd(1.6, 3.2) });
+      for (var rq = 0; rq < foes.length; rq++) {
+        var fr = foes[rq];
+        if (fr.dead > 0) continue;
+        if (Math.abs((fr.x + fr.w / 2) - (P.x + P.w / 2)) < 78 && Math.abs(fr.y - P.y) < 60) {
+          fr.dead = 99; gems += 5; sfx('stomp'); shake = 0.3;
+          floats.push({ x: fr.x + fr.w / 2, y: fr.y, txt: '+٥', life: 0.9, c: '#7fc4ff' });
+          for (var rp = 0; rp < 10; rp++) particles.push({ x: fr.x + fr.w / 2, y: fr.y + 8, vx: rnd(-140, 140), vy: rnd(-140, -10), life: 0.5, c: '#7fc4ff', r: 2.4 });
+        }
+      }
+      if (Math.random() < 0.25) rings.push({ x: P.x + P.w / 2, y: P.y + P.h * 0.7, r: 18, life: 0.5 });
+      hud();
+    }
+    for (var ri = rings.length - 1; ri >= 0; ri--) {
+      rings[ri].life -= dt; rings[ri].r += 190 * dt;
+      if (rings[ri].life <= 0) rings.splice(ri, 1);
+    }
+    for (var pi = proj.length - 1; pi >= 0; pi--) {
+      var pr = proj[pi];
+      pr.x += pr.vx * dt; pr.y += pr.vy * dt; pr.vy += 300 * dt; pr.rot += pr.spin * dt; pr.life -= dt;
+      var hitWall = hitBox(pr.x - 7, pr.y - 7, 14, 14);
+      if (hitWall) { pr.life = 0; puff(pr.x, pr.y, 5, '#e3cf9e'); sfx('glide'); }
+      for (var fi = 0; fi < foes.length; fi++) {
+        var ff2 = foes[fi];
+        if (ff2.dead > 0) continue;
+        if (pr.x > ff2.x - 6 && pr.x < ff2.x + ff2.w + 6 && pr.y > ff2.y - 6 && pr.y < ff2.y + ff2.h + 6) {
+          ff2.dead = 99; pr.life = 0; shake = 0.3; gems += 5; rage = Math.min(100, rage + 14); sfx('stomp'); hud();
+          floats.push({ x: ff2.x + ff2.w / 2, y: ff2.y, txt: '+٥ 🩴', life: 1.0, c: '#ffd166' });
+          for (var kk = 0; kk < 8; kk++) particles.push({ x: ff2.x + ff2.w / 2, y: ff2.y + 8, vx: rnd(-90, 90), vy: rnd(-120, -20), life: 0.5, c: '#d2452e', r: 2.2 });
+        }
+      }
+      if (pr.life <= 0) proj.splice(pi, 1);
     }
 
     /* جواهر */
     for (var g = 0; g < gemList.length; g++) {
       var gm = gemList[g]; if (gm.got) continue; gm.t += dt;
       if (Math.abs(gm.x - (P.x + P.w / 2)) < 20 && Math.abs(gm.y - (P.y + P.h / 2)) < 22) {
-        gm.got = true; gems++; sfx('gem'); hud();
+        gm.got = true; gems++; rage = Math.min(100, rage + 1.5); sfx('gem'); hud();
         floats.push({ x: gm.x, y: gm.y, txt: '+١', life: 0.7, c: '#7ef0c0' });
         for (var k = 0; k < 6; k++) particles.push({ x: gm.x, y: gm.y, vx: rnd(-70, 70), vy: rnd(-90, -20), life: 0.5, c: '#7ef0c0', r: 2.2 });
       }
@@ -421,7 +516,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 
     /* الكنز */
     if (goal && !P.dead && P.x < goal.x + goal.w && P.x + P.w > goal.x && P.y < goal.y + goal.h && P.y + P.h > goal.y) {
-      P.win = true; sfx('win');
+      P.winT = 1.3; sfx('win'); shake = 0.2;
     }
 
     /* كاميرا */
@@ -440,7 +535,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 
   function puff(x, y, n, c) { for (var i = 0; i < n; i++) particles.push({ x: x, y: y, vx: rnd(-60, 60), vy: rnd(-50, 10), life: 0.35, c: c, r: 2 }); }
   function hurt() {
-    if (P.inv > 0 || P.dead) return;
+    if (P.inv > 0 || P.dead || P.rageT > 0) return;
     lives--; P.inv = 1.6; shake = 0.5; sfx('hurt');
     P.vy = -260; P.vx = -P.face * 150;
     hud();
@@ -557,6 +652,26 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     }
     /* اللاعب */
     if (!P.dead || Math.floor(tGlobal * 14) % 2 === 0) drawPlayer();
+    /* حلقات الغضب */
+    for (var rr = 0; rr < rings.length; rr++) {
+      var rg = rings[rr];
+      ctx.globalAlpha = Math.max(0, rg.life * 1.6);
+      ctx.strokeStyle = '#7fc4ff'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rg.r, rg.r * 0.42, 0, 0, 7); ctx.stroke();
+      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.ellipse(rg.x, rg.y, rg.r * 0.72, rg.r * 0.3, 0, 0, 7); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    /* الشحّاطة الطايرة */
+    if (HERO.slip) {
+      for (var pj = 0; pj < proj.length; pj++) {
+        var pp = proj[pj];
+        ctx.save(); ctx.translate(pp.x, pp.y); ctx.rotate(pp.rot);
+        var sw = 26, sh2 = sw * (HERO.slip.height / HERO.slip.width);
+        ctx.drawImage(HERO.slip, -sw / 2, -sh2 / 2, sw, sh2);
+        ctx.restore();
+      }
+    }
     /* جزيئات + أرقام طايرة */
     for (var p2 = 0; p2 < particles.length; p2++) {
       var q = particles[p2]; ctx.globalAlpha = clamp(q.life * 2, 0, 1); ctx.fillStyle = q.c;
@@ -676,8 +791,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
       glide: P.gliding,
       alpha: a,
-      frame: (running || !P.on) ? 'run' : 'idle',
-      lift: lift, stretch: stretch, squash: squash, lean: lean
+      frame: P.winT > 0 ? 'win' : P.smashT > 0 ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
+      lift: lift, stretch: stretch, squash: squash, lean: lean,
+      spin: P.rageT > 0 ? Math.sin(tGlobal * 22) * 0.05 : 0
     });
   }
 
@@ -688,10 +804,20 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     $('hLives').textContent = new Array(Math.max(0, lives) + 1).join('♥') || '—';
     $('hGems').textContent = '💎 ' + gems;
     $('hTime').textContent = fmtT(time);
+    var rb = $('rageBar'); if (rb) { rb.style.width = Math.round(rage) + '%'; }
+    var rp = $('hRagePill'); if (rp) { rp.classList.toggle('full', rage >= 100); }
+    var kr = $('kRage'); if (kr) { kr.classList.toggle('armed', rage >= 100); }
+  }
+  function tryRage() {
+    if (state !== 'play' || rage < 100 || P.rageT > 0 || P.dead) return;
+    rage = 0; P.rageT = 6; P.inv = 6; sfx('win'); shake = 0.6;
+    rings.push({ x: P.x + P.w / 2, y: P.y + P.h * 0.7, r: 22, life: 0.9 });
+    floats.push({ x: P.x + P.w / 2, y: P.y - 14, txt: '🔥 وضع الغضب!', life: 1.3, c: '#ffd166' });
+    hud();
   }
   function fmtT(t) { var m = Math.floor(t / 60), s = Math.floor(t % 60); return m + ':' + (s < 10 ? '0' : '') + s; }
   function startGame() {
-    lives = MAXLIVES; gems = 0; loadLevel(0);
+    lives = MAXLIVES; gems = 0; rage = 0; loadLevel(0);
     show('ovTitle', false); show('ovWin', false); show('ovOver', false); show('ovClear', false); show('ovPause', false);
     state = 'play'; last = 0;
   }
@@ -736,12 +862,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     el.addEventListener('pointercancel', up);
     el.addEventListener('pointerleave', up);
   }
-  bindHold($('kL'), 'l'); bindHold($('kR'), 'r'); bindHold($('kJ'), 'j');
+  bindHold($('kL'), 'l'); bindHold($('kR'), 'r'); bindHold($('kJ'), 'j'); bindHold($('kT'), 'k');
   document.addEventListener('keydown', function (e) {
     var k = e.key.toLowerCase();
     if (k === 'arrowleft' || k === 'a') { keys.l = true; e.preventDefault(); }
     if (k === 'arrowright' || k === 'd') { keys.r = true; e.preventDefault(); }
     if (k === ' ' || k === 'arrowup' || k === 'w') { keys.j = true; e.preventDefault(); }
+    if (k === 'f' || k === 'x' || k === 'control') { keys.k = true; e.preventDefault(); }
     if (k === 'p' || k === 'escape') { pause(state === 'play'); }
     if (k === 'enter' && (state === 'title')) startGame();
   });
@@ -750,6 +877,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (k === 'arrowleft' || k === 'a') keys.l = false;
     if (k === 'arrowright' || k === 'd') keys.r = false;
     if (k === ' ' || k === 'arrowup' || k === 'w') keys.j = false;
+    if (k === 'f' || k === 'x' || k === 'control') keys.k = false;
   });
   $('bStart').onclick = startGame;
   $('bResume').onclick = function () { pause(false); };
@@ -762,6 +890,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   $('bHome2').onclick = function () { show('ovOver', false); state = 'title'; show('ovTitle', true); loadLevel(0); hud(); };
   $('bHome3').onclick = function () { show('ovWin', false); state = 'title'; show('ovTitle', true); loadLevel(0); hud(); };
   $('bPause').onclick = function () { pause(state === 'play'); };
+  $('kRage').addEventListener('pointerdown', function (e) { e.preventDefault(); tryRage(); });
   $('bMute').onclick = function () {
     muted = !muted; $('bMute').textContent = muted ? '🔇' : '🔊';
     try { localStorage.setItem('sinbad.mute', muted ? '1' : '0'); } catch (e) {}
@@ -794,7 +923,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     acc += dt;
     var guard = 0;
     while (acc >= STEP && guard++ < 12) { update(STEP); acc -= STEP; }
-    if (state === 'play') { hud(); }
+    if (state === 'play') { hud(); if ($('kT')) { $('kT').classList.toggle('cool', P.cd > 0); } }
     draw();
     requestAnimationFrame(loop);
   }
@@ -804,7 +933,8 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   $('bMute').textContent = muted ? '🔇' : '🔊';
   $('bestTag').textContent = best > 0 ? ('أفضل نتيجة عندك: 💎 ' + best) : 'أول مرة تلعب؟ بالتوفيق يا قبطان ⛵';
   requestAnimationFrame(loop);
-  window.__game = { start: startGame, load: loadLevel, get state() { return state; }, get p() { return P; }, keys: keys, get gems() { return gems; }, get lives() { return lives; }, get level() { return level; }, get cam() { return cam; }, next: nextLevel, setState: function (s) { state = s; }, jump: function () { P.vy = JUMP; } };
+  window.__game = { start: startGame, load: loadLevel, get state() { return state; }, get p() { return P; }, keys: keys, get gems() { return gems; }, get lives() { return lives; }, get level() { return level; }, get cam() { return cam; }, next: nextLevel, setState: function (s) { state = s; }, jump: function () { P.vy = JUMP; },
+    get rage() { return rage; }, setRage: function (v) { rage = v; hud(); }, tryRage: tryRage, get proj() { return proj; } };
 })();
 </script>
 </body>
