@@ -12,10 +12,10 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
-body{background:#0d1f38;color:#fdfaf4;font-family:"Readex Pro",system-ui,Tahoma,sans-serif;
+body{background:linear-gradient(180deg,#0f2a4e 0%,#17335c 45%,#2a4f78 100%) fixed;color:#fdfaf4;font-family:"Readex Pro",system-ui,Tahoma,sans-serif;
   overflow:hidden;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
   touch-action:none;overscroll-behavior:none}
-#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+#app{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:space-between;
   padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
 #hud{width:100%;max-width:900px;margin-bottom:2px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;padding:2px 6px}
 #hud .pill{background:#ffffff1a;border:1px solid #ffffff2e;border-radius:999px;padding:4px 10px;white-space:nowrap}
@@ -186,9 +186,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- حالة اللعبة ---------- */
   var state = 'title', level = 0, lives = MAXLIVES, gems = 0, time = 0;
   var solids, hazards, gemList, foes, goal, spawn, mapW, mapH, cam = { x: 0 };
-  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
+  var P = { x: 0, y: 0, vx: 0, vy: 0, w: 24, h: 32, on: false, groundT: 0, face: 1, inv: 0, coyote: 0, jbuf: 0, anim: 0, gliding: false, dead: false, deadT: 0, win: false };
   var keys = { l: false, r: false, j: false };
-  var particles = [], floats = [], tGlobal = 0, shake = 0;
+  var particles = [], floats = [], tGlobal = 0, shake = 0, runLatch = false, lastDust = 0;
   var best = 0, muted = false;
   /* ---------- شكل الشخصية (قابل للتخصيص من المستخدم) ---------- */
   var LOOK = { skin: '#e8b98a', hat: 'turban', hatCol: '#fdfaf4', tunic: '#1f7a5a', pants: '#5a3a12', sash: '#d94f3d', carpet: '#b3202f', img: null };
@@ -211,13 +211,16 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     opt = opt || {};
     var img = (frame === 'run' && HERO.i2) ? HERO.i2 : HERO.i1;
     if (!img) return false;
-    var th = h * 2.15, tw = th * (img.width / img.height);
+    var st = 1 + (opt.stretch || 0);
+    var th = h * 2.15 * st, tw = th * (img.width / img.height) * (1 - (opt.squash || 0));
+    /* تقريب الموضع لبكسل صحيح — يمنع الرجفة (shimmer) */
+    var cx = Math.round(x + w / 2), by = Math.round(y + h + (opt.lift || 0));
     g.save();
-    g.translate(x + w / 2, y + h);
+    g.translate(cx, by);
     g.scale(face, 1);
+    if (opt.lean) g.rotate(opt.lean * face);
     if (opt.alpha != null) g.globalAlpha = opt.alpha;
-    if (opt.tilt) g.rotate(opt.tilt);
-    g.drawImage(img, -tw / 2, -th, tw, th);
+    g.drawImage(img, Math.round(-tw / 2), -th, Math.round(tw), Math.round(th));
     g.restore(); g.globalAlpha = 1;
     return true;
   }
@@ -279,7 +282,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         else if (ch === 'S') spawn = { x: x * TS + 4, y: y * TS + 2 };
       }
     }
-    P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; P.dead = false; P.win = false; P.deadT = 0; P.inv = 0; P.face = 1;
+    P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; P.dead = false; P.win = false; P.deadT = 0; P.inv = 0; P.face = 1; P.groundT = 0.2;
     cam.x = 0; cam.y = Math.max(0, mapH * TS - view.h); particles = []; floats = []; time = 0;
     level = i;
     hud();
@@ -358,10 +361,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (P.vy !== 0 && hitBox(P.x, P.y, P.w, P.h)) {
       var dirY = P.vy > 0 ? 1 : -1, gY = 0;
       while (hitBox(P.x, P.y, P.w, P.h) && gY++ < 400) { P.y -= dirY * 0.5; }
-      if (dirY > 0) { P.y = Math.floor((P.y + P.h) / TS) * TS - P.h; P.on = true; P.coyote = COYOTE; }
+      if (dirY > 0) { P.y = Math.floor((P.y + P.h) / TS) * TS - P.h; P.on = true; P.groundT = 0.14; P.coyote = COYOTE; }
       else { P.y = (Math.floor(P.y / TS) + 1) * TS; }
       P.vy = 0;
     }
+    /* علم «واقف على الأرض» ثابت (يمنع رفرفة الأنيميشن) */
+    P.groundT = Math.max(0, P.groundT - dt);
+    P.on = P.groundT > 0;
     /* أمان: لو صار داخل بلاطة صلبة لأي سبب */
     if (hitBox(P.x, P.y, P.w, P.h)) { P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; }
     if (P.on) P.coyote = COYOTE;
@@ -647,13 +653,31 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   function drawPlayer() {
     if (P.dead && Math.floor(tGlobal * 14) % 2 !== 0) return;
     var a = (P.inv > 0 && Math.floor(tGlobal * 16) % 2 === 0) ? 0.45 : 1;
-    var moving = Math.abs(P.vx) > 25;
+    /* إطار الركض: مع فاصل (hysteresis) حتى لا يرفّ بين الإطارين */
+    var spd = Math.abs(P.vx);
+    if (spd > 30) runLatch = true; else if (spd < 12) runLatch = false;
+    var running = runLatch && P.on;
+    var lift = 0, stretch = 0, squash = 0, lean = 0;
+    if (running) {
+      var s1 = Math.abs(Math.sin(P.anim * 3.2));
+      lift = -s1 * 2.6;                      // نطة الجري
+      stretch = s1 * 0.035;                  // تمدد بسيط
+      lean = 0.055;                          // ميل ثابت للأمام (ثابت = بلا رجفة)
+      /* غبار تحت النعل */
+      if (tGlobal - lastDust > 0.1) {
+        lastDust = tGlobal;
+        particles.push({ x: P.x + P.w / 2 - P.face * 8, y: P.y + P.h - 2, vx: -P.face * rnd(15, 45), vy: rnd(-25, -2), life: 0.35, c: '#e3cf9e', r: rnd(1.6, 3) });
+      }
+    } else if (!P.on) {
+      lean = 0.03;
+      stretch = clamp(-P.vy * 0.00018, -0.05, 0.07);   // تمدد بالنزول
+    }
     drawChar(ctx, P.x, P.y, P.w, P.h, P.face, LOOK, {
-      bob: P.on ? Math.sin(P.anim * 3) * 1.2 : 0,
+      bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
       glide: P.gliding,
       alpha: a,
-      frame: (!P.on || moving) ? 'run' : 'idle',
-      tilt: (moving && P.on) ? Math.sin(P.anim * 6) * 0.03 : 0
+      frame: (running || !P.on) ? 'run' : 'idle',
+      lift: lift, stretch: stretch, squash: squash, lean: lean
     });
   }
 
