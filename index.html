@@ -234,14 +234,27 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       var n = HERO.runN, fw = HERO.runSheet.width / n, fh = HERO.runSheet.height;
       var rf = ((opt.runFrame || 0) % n + n) % n;
       /* دورة الصور فيها نطة طبيعية — لا نضيف نطة/تمدد فوقها (كان يسبب رجفة) */
-      var th2 = h * 2.15;
+      var th2 = h * 2.3;
       var tw2 = th2 * (fw / fh);
-      var cx2 = Math.round(x + w / 2), by2 = Math.round(y + h);
+      var cx2 = Math.round(x + w / 2);
+      /* طور الخطوة (0..1) — كل شي متزامن مع المسافة عشان ما يرتجف */
+      var ph = (opt.phase || 0);
+      var bob = -Math.abs(Math.sin(ph * Math.PI)) * 1.6;          /* نطة خفيفة */
+      var stretch = 1 + Math.abs(Math.sin(ph * Math.PI)) * 0.022;  /* تمدد */
+      var th3 = th2 * stretch, tw3 = tw2 * stretch;
+      var by2 = Math.round(y + h + bob);
+      var dx = Math.round(-tw3 / 2), dy = -th3;
       g.save();
-      g.translate(cx2, by2);
-      g.scale(face, 1);
+      g.translate(cx2, by2); g.scale(face, 1);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
-      g.drawImage(HERO.runSheet, Math.round(rf * fw), 0, Math.round(fw), fh, Math.round(-tw2 / 2), -th2, Math.round(tw2), Math.round(th2));
+      /* شبحة الإطار السابق — تعطي إحساس سرعة وانسيابية */
+      if (opt.ghost && HERO.runSheet) {
+        g.globalAlpha = 0.22 * (opt.alpha == null ? 1 : opt.alpha);
+        var rg = ((rf - 1) % n + n) % n;
+        g.drawImage(HERO.runSheet, Math.round(rg * fw), 0, Math.round(fw), fh, dx + 3, dy, Math.round(tw3), Math.round(th3));
+        g.globalAlpha = (opt.alpha == null ? 1 : opt.alpha);
+      }
+      g.drawImage(HERO.runSheet, Math.round(rf * fw), 0, Math.round(fw), fh, dx, dy, Math.round(tw3), Math.round(th3));
       g.restore(); g.globalAlpha = 1;
       return true;
     }
@@ -753,7 +766,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         g.fillStyle = '#ffd166'; g.fillRect(-17, -6.5, 34, 2.2);
         g.restore();
       }
-      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin })) return;
+      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, phase: opt.phase, ghost: opt.ghost, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin })) return;
       g.save(); g.translate(bx + bw / 2, by + bh); g.scale(face * u, u);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
     }
@@ -830,7 +843,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       bob: running ? Math.sin(P.anim * 3.2) * 0.8 : 0,
       glide: P.gliding,
       alpha: a,
-      runFrame: Math.floor(P.dist / 15.5),
+      runFrame: Math.floor(P.dist / 12.2),
+      phase: (P.dist / 12.2) % 1,
+      ghost: running && Math.abs(P.vx) > 60,
       frame: P.winT > 0 ? 'win' : (charging || P.smashT > 0) ? 'smash' : P.rageT > 0 ? 'spin' : P.throwT > 0 ? 'throw' : ((running || !P.on) ? 'run' : 'idle'),
       lift: lift, stretch: stretch, squash: squash, lean: lean,
       spin: P.rageT > 0 ? Math.sin(tGlobal * 22) * 0.05 : 0
