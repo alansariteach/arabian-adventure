@@ -753,7 +753,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         g.fillStyle = '#ffd166'; g.fillRect(-17, -6.5, 34, 2.2);
         g.restore();
       }
-      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt })) return;
+      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin })) return;
       g.save(); g.translate(bx + bw / 2, by + bh); g.scale(face * u, u);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
     }

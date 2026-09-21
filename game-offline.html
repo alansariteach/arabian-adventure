@@ -233,14 +233,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (frame === 'run' && HERO.runSheet && HERO.runN) {
       var n = HERO.runN, fw = HERO.runSheet.width / n, fh = HERO.runSheet.height;
       var rf = ((opt.runFrame || 0) % n + n) % n;
-      var th2 = h * 2.15 * (1 + (opt.stretch || 0));
+      /* دورة الصور فيها نطة طبيعية — لا نضيف نطة/تمدد فوقها (كان يسبب رجفة) */
+      var th2 = h * 2.15;
       var tw2 = th2 * (fw / fh);
-      var cx2 = Math.round(x + w / 2), by2 = Math.round(y + h + (opt.lift || 0));
+      var cx2 = Math.round(x + w / 2), by2 = Math.round(y + h);
       g.save();
       g.translate(cx2, by2);
       g.scale(face, 1);
-      if (opt.lean) g.rotate(opt.lean * face);
-      if (opt.spin) g.rotate(opt.spin);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
       g.drawImage(HERO.runSheet, Math.round(rf * fw), 0, Math.round(fw), fh, Math.round(-tw2 / 2), -th2, Math.round(tw2), Math.round(th2));
       g.restore(); g.globalAlpha = 1;
@@ -754,7 +753,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         g.fillStyle = '#ffd166'; g.fillRect(-17, -6.5, 34, 2.2);
         g.restore();
       }
-      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt })) return;
+      if (drawHeroSprite(g, bx, by, bw, bh, face, opt.frame || 'idle', { alpha: opt.alpha, tilt: opt.tilt, runFrame: opt.runFrame, lift: opt.lift, stretch: opt.stretch, squash: opt.squash, lean: opt.lean, spin: opt.spin })) return;
       g.save(); g.translate(bx + bw / 2, by + bh); g.scale(face * u, u);
       if (opt.alpha != null) g.globalAlpha = opt.alpha;
     }
