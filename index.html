@@ -202,7 +202,119 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "   S  =====         o  ===^^  w             o  ====  ^^     oB  ====  oXo    G  ",
           "###################   ####################   ############################   ####",
           "###################   ####################   ############################   ####",
-          "###################~~~####################~~~############################~~~####"    ]}
+          "###################~~~####################~~~############################~~~####"    ]},
+{ name: 'الكثبان', need: 5, rows: [
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "          o               o              o                                        ",
+          "      f =====        =====     o     =====h        o      =====                   ",
+          "     =====  o    =====  k   =====  o   =====      o   ====w      =====            ",
+          "  S  =====    o   =====      ==^^  o   =====      ====    oX o o G                ",
+          "##############~#############################~#########################~###########",
+          "##############~#############################~#########################~###########",
+          "##############~#############################~#########################~###########",
+    ]},
+
+    { name: 'المدينة القديمة', need: 5, rows: [
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "            o                o                 o            B                     ",
+          "   p  =====       o      =====        k   =====     =====h     o  ===             ",
+          "      ====   f ====^^  o    ====      o     ===== k   ====w   ==^^                ",
+          "S  =====    ====  ==== o   =====    ====  w   ====B    ====  oXo o G              ",
+          "########~###############################~#################################~#######",
+          "########~###############################~#################################~#######",
+          "########~###############################~#################################~#######",
+    ]},
+
+    { name: 'جزيرة النعال', need: 5, rows: [
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "         o                  o                 o             X                     ",
+          "   f ====       o     =====  k   o    ====s     =====    o  ====                  ",
+          "S  =====    ====  ^^   =====  =====     o  ====  w  ==== o  ====                  ",
+          "       o   =====       o   =====   ====s     o   =====h  oX oo G                  ",
+          "####################~#############################~##########################~####",
+          "####################~#############################~##########################~####",
+          "####################~#############################~##########################~####",
+    ]},
+
+    { name: 'القلعة', need: 5, rows: [
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                  o                             o                                 ",
+          "      =====       o       =====o       w    =====  o       =====                  ",
+          "  f =====   ====k====       ====   o   ====hB       ====    o  ====               ",
+          " S =====  o  ====  ==== o  =====   ====     =====   o  ==== XoXo G                ",
+          "######~###########################~###############################~###############",
+          "######~###########################~###############################~###############",
+          "######~###########################~###############################~###############",
+    ]},
+
+    { name: 'الزعيم النهائي', need: 5, rows: [
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "                                                                                  ",
+          "        o                    o                     o                              ",
+          "  ===== k   =====    ===== p          ===== f       =====  o                      ",
+          " =====  s  =====  =====  o  ====B    =====h  ====w  =====  XoXo                   ",
+          "S  ====    ====   ==== o ====    ====  o  ====   ====   oXoXoXo G                 ",
+          "####~#########################~#################################~#################",
+          "####~#########################~#################################~#################",
+          "####~#########################~#################################~#################",
+    ]},
+  ];
+
+  /* ---------- تلوين الخلفية العميقة حسب المرحلة (أ) ---------- */
+  var THEMES = [
+    { sky:['#0d2a52','#2f6ea3','#86b8d8','#f3c07a'], sea:'#2f76a6', sea2:'#1c4d74', sun:'#ffe9b0',
+      dunes:['#52738f','#7d6547','#9c7a4e','#b98d57','#d3a463'], fog:'rgba(228,241,250,',
+      glow:['rgba(255,232,190,0)','rgba(255,226,170,0.34)'] },
+    { sky:['#062f57','#146a9e','#4fb3d9','#bfe6f0'], sea:'#1d88c4', sea2:'#0e5b8f', sun:'#f2fbff',
+      dunes:['#1e6f9e','#1779b0','#1c8dc7','#3aa5d8','#6cc4ea'], fog:'rgba(220,244,255,',
+      glow:['rgba(200,240,255,0)','rgba(200,240,255,0.30)'] },
+    { sky:['#0a0e1a','#1a2240','#3a2a4a','#6b2f3f'], sea:'#221b34', sea2:'#140f22', sun:'#8a4a6a',
+      dunes:['#241c38','#2a1f3a','#332644','#3e2e4e','#4a3560'], fog:'rgba(120,120,180,',
+      glow:['rgba(200,160,200,0)','rgba(200,160,200,0.20)'] },
+    { sky:['#123a22','#c9a86c','#e6cf9a','#fbe7bd'], sea:'#b98d4a', sea2:'#8a6432', sun:'#fff0c0',
+      dunes:['#c8a05a','#d3a463','#dbb270','#e3c07e','#eccf92'], fog:'rgba(250,235,200,',
+      glow:['rgba(255,236,190,0)','rgba(255,232,170,0.33)'] },
+    { sky:['#2a1f12','#7a5a34','#c99a63','#e8c79a'], sea:'#a8783f', sea2:'#7a5326', sun:'#ffd9a0',
+      dunes:['#9a7448','#a87f50','#b88a58','#c99660','#d9a76c'], fog:'rgba(240,220,190,',
+      glow:['rgba(255,224,175,0)','rgba(255,216,160,0.30)'] },
+    { sky:['#04554f','#0a9d8f','#4fd0be','#9ff0e0'], sea:'#0f8f7e', sea2:'#0a6b5e', sun:'#e6fff4',
+      dunes:['#0e8a79','#12a08d','#2cb3a0','#54c9b6','#86ddcc'], fog:'rgba(205,250,240,',
+      glow:['rgba(200,255,240,0)','rgba(200,255,240,0.30)'] },
+    { sky:['#1a2026','#39434c','#596369','#8a8f92'], sea:'#4a535b', sea2:'#31383f', sun:'#b8bec2',
+      dunes:['#45505a','#545f69','#66707a','#7c8590','#949da6'], fog:'rgba(190,200,210,',
+      glow:['rgba(220,230,240,0)','rgba(220,230,240,0.28)'] },
+    { sky:['#1c0a12','#4a1226','#8a2a3a','#c64a4a'], sea:'#5a1a2a', sea2:'#380f18', sun:'#ff8a5a',
+      dunes:['#4a1528','#5e1c30','#73253a','#8a2f45','#a03a52'], fog:'rgba(230,150,150,',
+      glow:['rgba(255,180,150,0)','rgba(255,150,120,0.28)'] }
   ];
 
   /* ---------- أدوات ---------- */
@@ -866,43 +978,44 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     if (shake > 0) ctx.translate(rnd(-3, 3) * shake * 2, rnd(-2, 2) * shake * 2);
 
     /* ---------- خلفية بعمق: سماء + بحر + ضباب + طبقات كثبان ---------- */
+    var TH = THEMES[Math.min(level, THEMES.length - 1)] || THEMES[0];
     var sky = ctx.createLinearGradient(0, 0, 0, H * 0.78);
-    sky.addColorStop(0, '#0d2a52'); sky.addColorStop(0.42, '#2f6ea3');
-    sky.addColorStop(0.74, '#86b8d8'); sky.addColorStop(1, '#f3c07a');
+    sky.addColorStop(0, TH.sky[0]); sky.addColorStop(0.42, TH.sky[1]);
+    sky.addColorStop(0.74, TH.sky[2]); sky.addColorStop(1, TH.sky[3]);
     ctx.fillStyle = sky; ctx.fillRect(0, 0, W, H);
     /* شمس بهالة ثلاثية */
     var sunX = W * 0.76, sunY = H * 0.19;
-    ctx.fillStyle = '#ffd88a';
+    ctx.fillStyle = TH.sun;
     ctx.globalAlpha = 0.13; ctx.beginPath(); ctx.arc(sunX, sunY, 78, 0, 7); ctx.fill();
     ctx.globalAlpha = 0.26; ctx.beginPath(); ctx.arc(sunX, sunY, 50, 0, 7); ctx.fill();
-    ctx.globalAlpha = 1; ctx.fillStyle = '#ffe9b0'; ctx.beginPath(); ctx.arc(sunX, sunY, 30, 0, 7); ctx.fill();
+    ctx.globalAlpha = 1; ctx.fillStyle = TH.sun; ctx.beginPath(); ctx.arc(sunX, sunY, 30, 0, 7); ctx.fill();
     /* بحر بعيد */
     var seaY = H * 0.58;
     var sea = ctx.createLinearGradient(0, seaY, 0, seaY + 34);
-    sea.addColorStop(0, '#2f76a6'); sea.addColorStop(1, '#1c4d74');
+    sea.addColorStop(0, TH.sea); sea.addColorStop(1, TH.sea2);
     ctx.fillStyle = sea; ctx.fillRect(0, seaY, W, 34);
     /* لمعان على الماء (بارالاكس بطيء) */
     for (var si = 0; si < 24; si++) {
       var sx = ((si * 83 - cam.x * 0.05) % (W + 80) + W + 80) % (W + 80) - 40;
       var sy = seaY + 5 + (si % 5) * 6.4;
       ctx.globalAlpha = 0.10 + 0.09 * Math.abs(Math.sin(tGlobal * 1.8 + si));
-      ctx.fillStyle = '#e6f6ff'; ctx.fillRect(sx, sy, 18 + (si % 4) * 9, 1.6);
+      ctx.fillStyle = 'rgba(230,246,255,0.9)'; ctx.fillRect(sx, sy, 18 + (si % 4) * 9, 1.6);
     }
     ctx.globalAlpha = 1;
     /* جزر/جبال بعيدة جداً */
-    dune(0.05, H * 0.60, '#52738f', 150, 0.5);
+    dune(0.05, H * 0.60, TH.dunes[0], 150, 0.5);
     /* ضباب الأفق */
     var fog = ctx.createLinearGradient(0, H * 0.44, 0, H * 0.82);
-    fog.addColorStop(0, 'rgba(228,241,250,0.62)'); fog.addColorStop(0.45, 'rgba(228,241,250,0.26)'); fog.addColorStop(1, 'rgba(228,241,250,0)');
+    fog.addColorStop(0, TH.fog + '0.60)'); fog.addColorStop(0.45, TH.fog + '0.24)'); fog.addColorStop(1, TH.fog + '0)');
     ctx.fillStyle = fog; ctx.fillRect(0, H * 0.44, W, H * 0.38);
     /* كثبان بأربع طبقات عمق */
-    dune(0.13, H * 0.66, '#7d6547', 122, 0.8);
-    dune(0.28, H * 0.74, '#9c7a4e', 98, 1.15);
-    dune(0.46, H * 0.82, '#b98d57', 76, 1.55);
-    dune(0.66, H * 0.90, '#d3a463', 60, 2.0);
+    dune(0.13, H * 0.66, TH.dunes[1], 122, 0.8);
+    dune(0.28, H * 0.74, TH.dunes[2], 98, 1.15);
+    dune(0.46, H * 0.82, TH.dunes[3], 76, 1.55);
+    dune(0.66, H * 0.90, TH.dunes[4], 60, 2.0);
     /* وهج أمامي (عمق أمامي) */
     var nf = ctx.createLinearGradient(0, H * 0.84, 0, H);
-    nf.addColorStop(0, 'rgba(255,232,190,0)'); nf.addColorStop(1, 'rgba(255,226,170,0.34)');
+    nf.addColorStop(0, TH.glow[0]); nf.addColorStop(1, TH.glow[1]);
     ctx.fillStyle = nf; ctx.fillRect(0, H * 0.84, W, H * 0.16);
 
     ctx.translate(-Math.round(cam.x), -Math.round(cam.y));
@@ -1216,7 +1329,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- شاشات ---------- */
   function show(id, on) { $(id).hidden = !on; }
   function hud() {
-    $('hLevel').textContent = 'المرحلة ' + ['١', '٢', '٣'][level] + ' · ' + LEVELS[level].name;
+    var _ARN=['١','٢','٣','٤','٥','٦','٧','٨','٩']; $('hLevel').textContent = 'المرحلة ' + (_ARN[level]||(level+1)) + ' · ' + LEVELS[level].name;
     $('hLives').textContent = new Array(Math.max(0, lives) + 1).join('♥') || '—';
     $('hGems').textContent = '🐚 ' + gems;
     if ($('hSlip')) $('hSlip').textContent = '🩴 ' + slips;
