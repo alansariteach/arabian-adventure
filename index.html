@@ -154,7 +154,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                 b                     b                        ",
           "                   o                      o                   o                 ",
           "          o      ====       o           =====       o       =====               ",
-          "   S    =====        co   =====   o          co   ====            o   o o G     ",
+          "   S    =====       kco   =====   o   w      co   ====            o   o o G     ",
           "###############   ##########   ######################   ########################",
           "###############   ##########   ######################   ########################",
           "###############~~~##########~~~######################~~~########################"    ]},
@@ -169,7 +169,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                           o                  b                 ",
           "                o                  o      ====              o                   ",
           "        o     =====       o      =====              o     ====      o           ",
-          "   S   ====        c    ====  o       c         o =====c        o ===== o   G   ",
+          "   S   ====B       c    ====  o       c     k   o =====c       w o ===== o   G  ",
           "############   ######   #######################   #####################   ######",
           "############   ######   #######################   #####################   ######",
           "############~~~######~~~#######################~~~#####################~~~######"    ]},
@@ -184,7 +184,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
           "                                o                                               ",
           "                 o             ====      o                o                     ",
           "        o      ====      o             =====     o      =====     o             ",
-          "   S  ===== c       o  ===^^        c       o  ==== c^^     o   ====  o o    G  ",
+          "   S  ===== c       o  ===^^  w     c       o  ==== c^^     oB  ====  o o    G  ",
           "###################   ####################   ############################   ####",
           "###################   ####################   ############################   ####",
           "###################~~~####################~~~############################~~~####"    ]}
@@ -205,6 +205,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   var keys = { l: false, r: false, j: false, k: false };
   var particles = [], floats = [], tGlobal = 0, shake = 0, runLatch = false, lastDust = 0;
   var proj = [], rage = 0, rings = [], charging = false, chargeT = 0;
+  var wshots = [], splashes = [], FOEIMG = {};
   var best = 0, muted = false;
   /* ---------- شكل الشخصية (قابل للتخصيص من المستخدم) ---------- */
   var LOOK = { skin: '#e8b98a', hat: 'turban', hatCol: '#fdfaf4', tunic: '#1f7a5a', pants: '#5a3a12', sash: '#d94f3d', carpet: '#b3202f', img: null };
@@ -228,6 +229,12 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     var bd = new Image(); bd.onload = function () { HERO.board = bd; HERO.ready = true; }; bd.src = 'hero_board.webp?v=12';
     var bi = new Image(); bi.onload = function () { HERO.boardIdle = bi; }; bi.src = 'hero_board_idle.webp?v=1';
     var rs = new Image(); rs.onload = function () { HERO.runSheet = rs; HERO.runN = 8; }; rs.src = 'hero_run_sheet.webp?v=11';
+    var e1 = new Image(); e1.onload = function () { FOEIMG.skater = e1; }; e1.src = 'enemy_skater.webp?v=1';
+    var e2 = new Image(); e2.onload = function () { FOEIMG.brute = e2; }; e2.src = 'enemy_brute.webp?v=1';
+    var e3 = new Image(); e3.onload = function () { FOEIMG.blaster = e3; }; e3.src = 'enemy_blaster.webp?v=1';
+    var e4 = new Image(); e4.onload = function () { FOEIMG.shot = e4; }; e4.src = 'shot_normal.webp?v=1';
+    var e5 = new Image(); e5.onload = function () { FOEIMG.shotFast = e5; }; e5.src = 'shot_fast.webp?v=1';
+    var e6 = new Image(); e6.onload = function () { FOEIMG.splash = e6; }; e6.src = 'shot_impact.webp?v=1';
   })();
 
   /* ---------- لوح ركوب مرسوم برمجياً (نظيف وبألوان الأصل) ---------- */
@@ -415,6 +422,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         if (ch === 'o') gemList.push({ x: x * TS + TS / 2, y: y * TS + TS / 2, got: false, t: Math.random() * 6 });
         else if (ch === 'c') foes.push({ type: 'crab', x: x * TS + 4, y: y * TS + 6, w: 24, h: 20, vx: -42, dead: 0, t: Math.random() * 6 });
         else if (ch === 'b') foes.push({ type: 'bird', x: x * TS + 4, y: y * TS + 4, w: 26, h: 20, vx: -60, dead: 0, t: Math.random() * 6, y0: y * TS + 4 });
+        else if (ch === 'k') foes.push({ type: 'skater', x: x * TS + 3, y: y * TS - 2, w: 26, h: 32, vx: -96, vy: 0, dead: 0, t: Math.random() * 6, hp: 1 });
+        else if (ch === 'B') foes.push({ type: 'brute', x: x * TS + 1, y: y * TS - 6, w: 30, h: 38, vx: -42, vy: 0, dead: 0, t: Math.random() * 6, hp: 2, hurtT: 0 });
+        else if (ch === 'w') foes.push({ type: 'blaster', x: x * TS + 3, y: y * TS - 2, w: 26, h: 34, vx: 0, dead: 0, t: Math.random() * 6, hp: 1, cd: rnd(1.0, 2.2), face: -1, fireT: 0 });
         else if (ch === 'G') goal = { x: x * TS, y: y * TS, w: TS, h: TS };
         else if (ch === 'S') spawn = { x: x * TS + 4, y: y * TS + 2 };
       }
@@ -538,21 +548,69 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         f.x += f.vx * dt;
         var aheadX = f.vx > 0 ? f.x + f.w + 2 : f.x - 2;
         if (hitBox(aheadX, f.y, 2, f.h) || !hitBox(aheadX, f.y + f.h + 2, 2, 4)) f.vx = -f.vx;
-      } else {
+      } else if (f.type === 'bird') {
         f.x += f.vx * dt;
         f.y = f.y0 + Math.sin(f.t * 2.4) * 26;
         if (f.x < 0 || f.x > mapW * TS - f.w) f.vx = -f.vx;
+      } else if (f.type === 'skater') {
+        /* سريع ومراوغ: يركض ويقفز */
+        f.x += f.vx * dt;
+        var aheadS = f.vx > 0 ? f.x + f.w + 2 : f.x - 2;
+        if (hitBox(aheadS, f.y, 2, f.h) || !hitBox(aheadS, f.y + f.h + 2, 2, 4)) f.vx = -f.vx;
+        f.hopT = (f.hopT || rnd(0.6, 1.6)) - dt;
+        if (f.hopT <= 0 && f.vy === 0) { f.vy = -265; f.hopT = rnd(1.4, 2.6); }   /* يقفز بس وهو على الأرض (ما يتراكم) */
+        f.vy = Math.min(f.vy + GRAV * dt * 0.6, 460); f.y += f.vy * dt;
+        /* أرضية: نفحص صف القدمين (يمنع النزول داخل الأرض) */
+        if (f.vy >= 0) {
+          var frow = Math.floor((f.y + f.h) / TS), fcol = Math.floor((f.x + f.w / 2) / TS);
+          if (frow >= 0 && frow < mapH && fcol >= 0 && fcol < mapW && solids[frow][fcol]) {
+            f.y = frow * TS - f.h; f.vy = 0;
+          }
+        }
+      } else if (f.type === 'brute') {
+        /* ضخم ثقيل: يمشي ببطء */
+        f.x += f.vx * dt;
+        var aheadB = f.vx > 0 ? f.x + f.w + 2 : f.x - 2;
+        if (hitBox(aheadB, f.y, 2, f.h) || !hitBox(aheadB, f.y + f.h + 2, 2, 4)) f.vx = -f.vx;
+        if (f.hurtT > 0) f.hurtT -= dt;
+      } else if (f.type === 'blaster') {
+        /* بعيد المدى: يتبع اللاعب ويطلق الماء */
+        f.face = ((P.x + P.w / 2) < (f.x + f.w / 2)) ? -1 : 1;
+        var distB = Math.abs((P.x + P.w / 2) - (f.x + f.w / 2));
+        if (f.fireT > 0) f.fireT -= dt;
+        f.cd -= dt;
+        if (distB < 430 && f.cd <= 0 && !P.dead && state === 'play') {
+          f.cd = rnd(1.7, 2.6); f.fireT = 0.34;
+          wshots.push({ x: f.x + f.w / 2 + f.face * 15, y: f.y + f.h * 0.40, vx: f.face * 285, life: 2.4, t: 0 });
+          sfx('throw');
+        }
       }
       /* تصادم مع اللاعب */
       if (!P.dead && P.inv <= 0 && P.x < f.x + f.w && P.x + P.w > f.x && P.y < f.y + f.h && P.y + P.h > f.y) {
         var stomp = P.vy > 60 && (P.y + P.h) < (f.y + f.h * 0.6);
         if (stomp) {
-          f.dead = 99; P.vy = -400; sfx('stomp'); shake = 0.25;
-          floats.push({ x: f.x + f.w / 2, y: f.y, txt: '+٥', life: 0.9, c: '#ffd166' });
-          gems += 5; rage = Math.min(100, rage + 14); hud();
+          if (f.hp > 1) { f.hp--; f.hurtT = 0.35; P.vy = -430; sfx('stomp'); shake = 0.25; }
+          else {
+            f.dead = 99; P.vy = -400; sfx('stomp'); shake = 0.25;
+            floats.push({ x: f.x + f.w / 2, y: f.y, txt: '+٥', life: 0.9, c: '#ffd166' });
+            gems += 5; rage = Math.min(100, rage + 14); hud();
+          }
         } else hurt();
       }
     }
+
+    /* طلقات الماء (العدو بعيد المدى) */
+    for (var wi = wshots.length - 1; wi >= 0; wi--) {
+      var ws = wshots[wi];
+      ws.t += dt; ws.life -= dt; ws.x += ws.vx * dt;
+      if (ws.t > 0.12) ws.fast = true;
+      if (hitBox(ws.x - 3, ws.y - 3, 6, 6)) { splashes.push({ x: ws.x, y: ws.y, life: 0.34 }); wshots.splice(wi, 1); continue; }
+      if (!P.dead && P.inv <= 0 && ws.x > P.x - 3 && ws.x < P.x + P.w + 3 && ws.y > P.y && ws.y < P.y + P.h) {
+        splashes.push({ x: ws.x, y: ws.y, life: 0.34 }); wshots.splice(wi, 1); hurt(); continue;
+      }
+      if (ws.life <= 0 || ws.x < -40 || ws.x > mapW * TS + 40) wshots.splice(wi, 1);
+    }
+    for (var si = splashes.length - 1; si >= 0; si--) { splashes[si].life -= dt; if (splashes[si].life <= 0) splashes.splice(si, 1); }
 
     /* رمي الشحّاطة */
     P.cd = Math.max(0, P.cd - dt);
@@ -775,7 +833,22 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     /* أعداء */
     for (var f2 = 0; f2 < foes.length; f2++) {
       var f = foes[f2]; if (f.dead > 0) continue;
-      if (f.type === 'crab') {
+      var fimg = null, fhh = 0;
+      if (f.type === 'skater' && FOEIMG.skater) { fimg = FOEIMG.skater; fhh = 46; }
+      else if (f.type === 'brute' && FOEIMG.brute) { fimg = FOEIMG.brute; fhh = 56; }
+      else if (f.type === 'blaster' && FOEIMG.blaster) { fimg = FOEIMG.blaster; fhh = 50; }
+      if (fimg) {
+        var fww = fhh * (fimg.width / fimg.height);
+        var fcx = Math.round(f.x + f.w / 2), fby = Math.round(f.y + f.h + 2);
+        var bobF = (f.type === 'brute') ? Math.abs(Math.sin(f.t * 3.4)) * 2.4 : Math.abs(Math.sin(f.t * 7)) * 1.6;
+        ctx.save();
+        ctx.translate(fcx, fby - bobF);
+        ctx.scale((f.face || (f.vx < 0 ? -1 : 1)) < 0 ? -1 : 1, 1);
+        if (f.hurtT > 0) ctx.globalAlpha = (Math.floor(f.t * 22) % 2) ? 0.45 : 1;
+        if (f.type === 'blaster' && f.fireT > 0) { ctx.rotate(-0.10 * (f.fireT / 0.34)); ctx.translate(-4, 0); }
+        ctx.drawImage(fimg, Math.round(-fww / 2), -Math.round(fhh), Math.round(fww), Math.round(fhh));
+        ctx.restore(); ctx.globalAlpha = 1;
+      } else if (f.type === 'crab') {
         ctx.fillStyle = '#d2452e';
         ctx.beginPath(); ctx.ellipse(f.x + 12, f.y + 11, 12, 8, 0, 0, 7); ctx.fill();
         ctx.fillStyle = '#ff8a6b';
@@ -791,6 +864,25 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         ctx.beginPath(); ctx.moveTo(f.x + 22, f.y + 8); ctx.lineTo(f.x + 34, f.y + 2 - fl2); ctx.lineTo(f.x + 20, f.y + 12); ctx.closePath(); ctx.fill();
         ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(f.x + 17, f.y + 8, 2.4, 0, 7); ctx.fill();
       }
+    }
+    /* طلقات الماء ومؤثرات الارتطام */
+    for (var wi2 = 0; wi2 < wshots.length; wi2++) {
+      var wd = wshots[wi2];
+      var simg = (wd.fast && FOEIMG.shotFast) ? FOEIMG.shotFast : FOEIMG.shot;
+      if (simg) {
+        var shh = 14, sww = shh * (simg.width / simg.height);
+        ctx.save(); ctx.translate(wd.x, wd.y); if (wd.vx < 0) ctx.scale(-1, 1);
+        ctx.drawImage(simg, Math.round(-sww / 2), Math.round(-shh / 2), Math.round(sww), Math.round(shh));
+        ctx.restore();
+      } else { ctx.fillStyle = '#3ba7ff'; ctx.beginPath(); ctx.arc(wd.x, wd.y, 5, 0, 7); ctx.fill(); }
+    }
+    for (var si2 = 0; si2 < splashes.length; si2++) {
+      var sp = splashes[si2];
+      if (!FOEIMG.splash) continue;
+      var ssz = 34 * (1.3 - sp.life / 0.34);
+      ctx.globalAlpha = Math.min(1, sp.life * 3.4);
+      ctx.drawImage(FOEIMG.splash, sp.x - ssz / 2, sp.y - ssz / 2, ssz, ssz);
+      ctx.globalAlpha = 1;
     }
     /* اللاعب */
     if (!P.dead || Math.floor(tGlobal * 14) % 2 === 0) drawPlayer();
@@ -1100,6 +1192,9 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
 
     get view() { return { w: view.w, h: view.h, k: view.k, cx: cam.x, cy: cam.y, cw: cv.width, ch: cv.height }; },
 
+    get foes() { return foes.map(function(f){ return { type: f.type, x: Math.round(f.x), y: Math.round(f.y), hp: f.hp, dead: f.dead, cd: f.cd == null ? null : +f.cd.toFixed(2), face: f.face, fireT: f.fireT == null ? null : +f.fireT.toFixed(2) }; }); },
+    get shots() { return wshots.map(function(s){ return { x: Math.round(s.x), y: Math.round(s.y), fast: !!s.fast }; }); },
+    get enemies() { return { skater: !!FOEIMG.skater, brute: !!FOEIMG.brute, blaster: !!FOEIMG.blaster, shot: !!FOEIMG.shot, shotFast: !!FOEIMG.shotFast, splash: !!FOEIMG.splash }; },
     get hero() { return { board: !!HERO.board, boardIdle: !!HERO.boardIdle, ready: HERO.ready, sheet: !!HERO.runSheet, n: HERO.runN, spin: !!HERO.spin, smash: !!HERO.smash, win: !!HERO.win, slip: !!HERO.slip }; }, tryRage: tryRage, get proj() { return proj; } };
 })();
 </script>
