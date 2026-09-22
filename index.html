@@ -563,6 +563,13 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
     P.x = spawn.x; P.y = spawn.y - P.h; P.vx = 0; P.vy = 0; P.dead = false; P.win = false; P.deadT = 0; P.inv = 0; P.face = 1; P.groundT = 0.2; P.throwT = 0; P.cd = 0; P.dist = 0; P.smashT = 0; P.rageT = 0; P.winT = 0;
     cam.x = 0; cam.y = Math.max(0, mapH * TS - view.h); particles = []; floats = []; time = 0;
     level = i;
+    /* زعيم يظهر قرب بداية المرحلة — يبان فوراً ويطاردك (ما ينفع يفوّت) */
+    if (boss) {
+      var _sr = Math.floor(spawn.y / TS), _sc = Math.floor(spawn.x / TS);
+      for (var _cx = _sc + 2; _cx < mapW - 2; _cx++) {
+        if (solids[_sr] && solids[_sr][_cx]) { boss.x = _cx * TS; boss.y = _sr * TS - boss.h; boss.vx = 0; boss.vy = 0; boss.on = true; break; }
+      }
+    }
     hud();
   }
 
@@ -754,7 +761,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         }
       }
       /* حركة */
-      if (B.act === 'walk') { B.vx = B.face * 62; }
+      if (B.act === 'walk') { B.vx = B.face * (distP > 520 ? 190 : 62); }
       else if (B.act === 'charge') { B.vx = B.face * 250; }
       else { B.vx *= (1 - Math.min(1, dt * 4)); }
       B.x += B.vx * dt;
