@@ -1502,12 +1502,31 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
   /* ---------- قياس الشاشة ---------- */
   function resize() {
     var padH = $('pad').offsetHeight || 90, hudH = $('hud').offsetHeight || 34;
-    var availW = Math.min(window.innerWidth - 12, 900);
-    var availH = Math.max(180, window.innerHeight - padH - hudH - 24);
-    var cssW = availW, cssH = Math.min(availH, Math.round(availW / 1.08));
-    /* view.h محدد مسبقاً (11 صف مرئي = تكبير) */
+    var availW = Math.max(200, window.innerWidth - 10);
+    var availH = Math.max(260, window.innerHeight - padH - hudH - 20);
     var dpr = Math.min(window.devicePixelRatio || 1, 2);
     view.dpr = dpr;
+    /* وضع عمودي (بورتريه): الشاشة أطول من عرضها → يعرض كامل ارتفاع الخريطة عمودياً */
+    var portrait = (availH > availW * 1.05);
+    var vh = Math.round((mapH || ROWS) * TS);            // كامل عمق الخريطة (14 صف)
+    var vw;
+    var cssW, cssH, aspect;
+    if (portrait) {
+      /* على الجوال: املأ الطول، العرض نسبة عمودية (تقريباً 9:16/أوسع قليلاً) */
+      aspect = 0.60;
+      cssH = availH;
+      cssW = Math.min(availW, Math.round(cssH * aspect));
+      cssH = Math.round(cssW / aspect);
+      if (cssH > availH) { cssH = availH; cssW = Math.round(availH * aspect); }
+      vh = Math.round((mapH || ROWS) * TS);
+    } else {
+      /* سطح المكتب/أفقي: يعرض 11 صف ويملأ العرض */
+      aspect = 1.08;
+      vh = 11 * TS;
+      cssW = Math.min(availW, 900);
+      cssH = Math.min(availH, Math.round(cssW / aspect));
+    }
+    view.h = Math.max(200, vh);
     cv.style.width = cssW + 'px'; cv.style.height = cssH + 'px';
     cv.width = Math.round(cssW * dpr); cv.height = Math.round(cssH * dpr);
     view.k = cv.height / view.h;              // بكسل جهاز لكل وحدة منطقية
