@@ -1110,23 +1110,48 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         ctx.fillStyle = '#ffd166'; ctx.beginPath(); ctx.arc(f.x + 17, f.y + 8, 2.4, 0, 7); ctx.fill();
       }
     }
-    /* الزعيم */
-    if (boss && boss.hp > 0 && FOEIMG.brute) {
+    /* الزعيم — مرسوم برمجياً دائماً (لا يعتمد على تحميل صورة) */
+    if (boss && boss.hp > 0) {
       var B2 = boss;
-      var bhh = B2.h * 2.5, bww = bhh * (FOEIMG.brute.width / FOEIMG.brute.height);
+      var asp = (FOEIMG.brute && FOEIMG.brute.width) ? (FOEIMG.brute.width / FOEIMG.brute.height) : 0.9;
+      var bhh = B2.h * 2.6, bww = bhh * asp * 0.92;
       var bcx = Math.round(B2.x + B2.w / 2), bby = Math.round(B2.y + B2.h + 3);
-      ctx.save();
+      var flip = (B2.face < 0 ? -1 : 1);
       /* ظل */
-      ctx.globalAlpha = 0.22; ctx.fillStyle = '#2a1a06';
-      ctx.beginPath(); ctx.save(); ctx.translate(bcx, B2.y + B2.h + 2); ctx.scale(1, 0.16); ctx.arc(0, 0, bww * 0.34, 0, 7); ctx.restore(); ctx.fill();
-      ctx.globalAlpha = 1;
-      ctx.translate(bcx, bby);
-      ctx.scale(B2.face < 0 ? -1 : 1, 1);
+      ctx.fillStyle = '#1c0f08'; ctx.globalAlpha = 0.22;
+      ctx.beginPath(); ctx.save(); ctx.translate(bcx, B2.y + B2.h + 2); ctx.scale(1, 0.15); ctx.arc(0, 0, bww * 0.34, 0, 7); ctx.restore(); ctx.fill(); ctx.globalAlpha = 1;
+      /* الجسم: رداء ضخم + رأس + عمامة (شكل مضمن يشتغل بلا صورة) */
+      ctx.save();
+      ctx.translate(bcx, bby); ctx.scale(flip, 1);
       if (B2.act === 'charge') ctx.rotate(-0.10);
       if (B2.hurtT > 0) ctx.globalAlpha = (Math.floor(B2.t * 22) % 2) ? 0.4 : 1;
-      ctx.drawImage(FOEIMG.brute, Math.round(-bww / 2), -Math.round(bhh), Math.round(bww), Math.round(bhh));
+      var bw2 = bww * 1.02, bh2 = bhh * 0.94;
+      var grad = ctx.createLinearGradient(0, -bh2, 0, 0);
+      grad.addColorStop(0, '#2c1226'); grad.addColorStop(0.55, '#4a1830'); grad.addColorStop(1, '#6a2038');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.rect(-bw2 / 2, -bh2, bw2, bh2); ctx.fill();
+      /* أطراف الرداء مشطوفة */
+      ctx.fillStyle = '#3a1428';
+      ctx.beginPath(); ctx.moveTo(-bw2 / 2, 0); ctx.lineTo(-bw2 * 0.9, -bh2 * 0.08); ctx.lineTo(bw2 * 0.9, -bh2 * 0.08); ctx.lineTo(bw2 / 2, 0); ctx.closePath(); ctx.fill();
+      /* وشاح ذهبي */
+      ctx.strokeStyle = '#d9a520'; ctx.lineWidth = 2.4;
+      ctx.beginPath(); ctx.moveTo(-bw2 * 0.34, -bh2 * 0.52); ctx.lineTo(bw2 * 0.34, -bh2 * 0.52); ctx.stroke();
+      /* الرأس + العمامة */
+      var hy = -bh2 * 0.94, hr = bhh * 0.15;
+      ctx.fillStyle = '#e8b98a'; ctx.beginPath(); ctx.arc(0, hy, hr, 0, 7); ctx.fill();
+      ctx.fillStyle = '#a8324a'; ctx.beginPath(); ctx.arc(0, hy - hr * 0.16, hr * 1.06, Math.PI, 0); ctx.fill();
+      /* عيون ذهبية */
+      ctx.fillStyle = '#ffd166';
+      ctx.fillRect(-hr * 0.52, hy - hr * 0.28, hr * 0.34, hr * 0.16); ctx.fillRect(hr * 0.2, hy - hr * 0.28, hr * 0.34, hr * 0.16);
       ctx.restore(); ctx.globalAlpha = 1;
-      /* تاج + هالة + اسم: علامة واضحة أنه زعيم */
+      /* صورة الأصل فوق الجسم إن توفرت */
+      if (FOEIMG.brute && FOEIMG.brute.width) {
+        ctx.save(); ctx.translate(bcx, bby); ctx.scale(flip, 1);
+        if (B2.hurtT > 0) ctx.globalAlpha = (Math.floor(B2.t * 22) % 2) ? 0.4 : 1;
+        ctx.drawImage(FOEIMG.brute, Math.round(-bww / 2), -Math.round(bhh), Math.round(bww), Math.round(bhh));
+        ctx.restore(); ctx.globalAlpha = 1;
+      }
+      /* تاج + هالة + اسم */
       ctx.globalAlpha = 0.30 + 0.18 * Math.sin(B2.t * 5);
       ctx.strokeStyle = '#ffd166'; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.ellipse(bcx, B2.y + B2.h * 0.5, bww * 0.50, bhh * 0.52, 0, 0, 7); ctx.stroke();
@@ -1140,7 +1165,6 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
       ctx.closePath(); ctx.fill();
       ctx.fillStyle = '#ff3b3b'; ctx.beginPath(); ctx.arc(bcx - 6, crownY - 6, 1.7, 0, 7); ctx.fill();
       ctx.fillStyle = '#2fd0ff'; ctx.beginPath(); ctx.arc(bcx + 7, crownY - 6, 1.7, 0, 7); ctx.fill();
-      /* اسم الزعيم كباند */
       ctx.font = '700 12px "Readex Pro",system-ui,sans-serif'; ctx.textAlign = 'center';
       var lbl = '👑 الزعيم'; var tw2 = ctx.measureText(lbl);
       ctx.fillStyle = '#2a0f0f'; ctx.fillRect(bcx - tw2 / 2 - 6, crownY - 34, tw2 + 12, 16);
@@ -1153,7 +1177,7 @@ canvas{display:block;border-radius:14px;box-shadow:0 10px 30px #0006;background:
         ctx.globalAlpha = 1;
       }
     }
-    /* العناصر */
+        /* العناصر */
     for (var pd = 0; pd < pickups.length; pd++) {
       var pu2 = pickups[pd];
       var byy = pu2.y + Math.sin(pu2.t * 3) * 3;
